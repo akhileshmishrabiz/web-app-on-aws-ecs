@@ -1,11 +1,28 @@
-provider "aws" {
-  region = "us-east-1"
+terraform {
+  required_version = "1.8.1"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "5.50"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.4.3"
+    }
+    template = {
+      source  = "hashicorp/template"
+      version = "2.2.0"  # Update this to a compatible version
+    }
+  }
 }
 
+provider "aws" {
+  region = var.region
+}
+
+# Using local backend
 terraform {
-  backend "s3" {
-    bucket = "python-flask-app-tf-state"
-    key    = "terraform.tfstate"
-    region = "us-east-1"
+  backend "local" {
+    path = "terraform.tfstate"
   }
 }

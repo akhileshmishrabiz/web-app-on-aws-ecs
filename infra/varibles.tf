@@ -1,8 +1,12 @@
-variable "app_name" {}
+variable "app_name" {
+  type = string
+  default = "web-app"
+}
 
-variable "environment" {}
-
-variable "default_region" {}
+variable "environment" {
+  type = string
+  default  = "dev"
+}
 
 variable "docker_username" {}
 

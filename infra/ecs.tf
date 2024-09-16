@@ -4,16 +4,16 @@ data "template_file" "python_app" {
     aws_ecr_repository            = aws_ecr_repository.python_app.repository_url
     tag                           = "latest"
     container_name                = var.app_name
-    aws_cloudwatch_log_group_name = aws_cloudwatch_log_group.python_app.name
+    aws_cloudwatch_log_group_name = aws_cloudwatch_log_group.ecs.name
     database_address              = aws_db_instance.postgres.address
     database_name                 = aws_db_instance.postgres.name
     postgres_username             = aws_db_instance.postgres.username
-    postgres_password             = "${data.aws_secretsmanager_secret.postgresql_password_secret.id}:POSTGRES_PASSWORD::"
+    postgres_password             = random_password.dbs_random_string.result
   }
 }
 
-resource "aws_ecs_task_definition" "service" {
-  family                   = "${var.app_name}-${var.environment}"
+resource "aws_ecs_task_definition" "main" {
+  family                   = "${var.environment}-${var.app_name}"
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   cpu                      = 256
@@ -26,10 +26,10 @@ resource "aws_ecs_task_definition" "service" {
   }
 }
 
-resource "aws_ecs_service" "staging" {
-  name                       = var.environment
-  cluster                    = aws_ecs_cluster.staging.id
-  task_definition            = aws_ecs_task_definition.service.arn
+resource "aws_ecs_service" "main" {
+  name                       = "${var.environment}-${var.app_name}-service"
+  cluster                    = aws_ecs_cluster.main.id
+  task_definition            = aws_ecs_task_definition.main.arn
   desired_count              = 1
   deployment_maximum_percent = 250
   launch_type                = "FARGATE"
@@ -54,33 +54,10 @@ resource "aws_ecs_service" "staging" {
   }
 }
 
-resource "aws_ecs_cluster" "staging" {
-  name = "${var.app_name}-cluster"
-    setting {
+resource "aws_ecs_cluster" "main" {
+  name = "${var.environment}-${var.app_name}-cluster"
+  setting {
     name  = "containerInsights"
     value = "enabled"
   }
 }
-
-resource "aws_cloudwatch_log_group" "rds_shrink" {
-  #checkov:skip=CKV_AWS_158: CWL get auto encrypted
-  name              = "/aws/ecs/${var.environment}-rds-shrink"
-  retention_in_days = var.log_retention_days
-}
-
-resource "aws_cloudwatch_query_definition" "rds_shrink_logs" {
-  name = "${var.environment}/rds-shrink"
-
-  log_group_names = [
-    aws_cloudwatch_log_group.rds_shrink.name,
-  ]
-
-  query_string = <<EOF
-filter @message not like /.+Waiting.+/
-| fields @timestamp, @message
-| sort @timestamp desc
-| limit 200
-EOF
-}
-
-

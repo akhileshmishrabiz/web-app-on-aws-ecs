@@ -37,15 +37,6 @@ resource "aws_iam_role_policy" "ecs_task_execution_role" {
         ],
         "Resource": "*"
     },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "secretsmanager:GetSecretValue"
-      ],
-      "Resource": [
-        "${data.aws_secretsmanager_secret.postgresql_password_secret.id}"
-      ]
-    }
   ]
 }
 EOF
