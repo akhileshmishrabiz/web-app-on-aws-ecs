@@ -11,17 +11,17 @@ Flask with RDS on aws EC2 behind A load balancer
 
 # run terraform 
 
-terraform init -backend-config=dev.tfbackend
+terraform init -backend-config=vars/dev.tfbackend
 
-terraform plan -var-file=dev.tfvars
+terraform plan -var-file=vars/dev.tfvars
 
-terraform apply -var-file=dev.tfvars
+terraform apply -var-file=vars/dev.tfvars
 
 # On prod 
 
-terraform init -backend-config=prod.tfbackend
+terraform init -backend-config=vars/prod.tfbackend
 
-terraform plan -var-file=prod.tfvars
+terraform plan -var-file=vars/prod.tfvars
 
-terraform apply -var-file=prod.tfvars
+terraform apply -var-file=vars/prod.tfvars
 

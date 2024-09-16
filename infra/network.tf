@@ -9,9 +9,9 @@ resource "aws_vpc" "main" {
 
 resource "aws_subnet" "public" {
   count                   = 2
-  cidr_block              = cidrsubnet(aws_vpc.default.cidr_block, 8, 2 + count.index)
+  cidr_block              = cidrsubnet(aws_vpc.main.cidr_block, 8, 2 + count.index)
   availability_zone       = data.aws_availability_zones.available_zones.names[count.index]
-  vpc_id                  = aws_vpc.default.id
+  vpc_id                  = aws_vpc.main.id
   map_public_ip_on_launch = true
 
   tags = {
@@ -21,9 +21,9 @@ resource "aws_subnet" "public" {
 
 resource "aws_subnet" "private" {
   count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.default.cidr_block, 8, count.index)
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
   availability_zone = data.aws_availability_zones.available_zones.names[count.index]
-  vpc_id            = aws_vpc.default.id
+  vpc_id            = aws_vpc.main.id
 
   tags = {
     Name = "ECS Fargate Private Subnet ${count.index}"
@@ -32,9 +32,9 @@ resource "aws_subnet" "private" {
 
 resource "aws_subnet" "rds" {
   count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.default.cidr_block, 8, 4 + count.index)
+  cidr_block        = cidrsubnet(aws_vpc.main.cidr_block, 8, 4 + count.index)
   availability_zone = data.aws_availability_zones.available_zones.names[count.index]
-  vpc_id            = aws_vpc.default.id
+  vpc_id            = aws_vpc.main.id
 
   tags = {
     Name = "RDS Private Subnet ${count.index}"
@@ -42,11 +42,11 @@ resource "aws_subnet" "rds" {
 }
 
 resource "aws_internet_gateway" "gateway" {
-  vpc_id = aws_vpc.default.id
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route" "internet_access" {
-  route_table_id         = aws_vpc.default.main_route_table_id
+  route_table_id         = aws_vpc.main.main_route_table_id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.gateway.id
 }
@@ -65,7 +65,7 @@ resource "aws_route" "internet_access" {
 
 # resource "aws_route_table" "private" {
 #   count  = 2
-#   vpc_id = aws_vpc.default.id
+#   vpc_id = aws_vpc.main.id
 
 #   route {
 #     cidr_block     = "0.0.0.0/0"
@@ -85,7 +85,7 @@ resource "aws_route" "internet_access" {
 
 resource "aws_security_group" "lb" {
   name        = "lb-sg"
-  vpc_id      = aws_vpc.default.id
+  vpc_id      = aws_vpc.main.id
   description = "controls access to the Application Load Balancer (ALB)"
 
   ingress {
@@ -105,7 +105,7 @@ resource "aws_security_group" "lb" {
 
 resource "aws_security_group" "ecs_tasks" {
   name        = "${var.environment}-${var.app_name}-ecs-tasks-sg"
-  vpc_id      = aws_vpc.default.id
+  vpc_id      = aws_vpc.main.id
   description = "allow inbound access from the ALB only"
 
   ingress {

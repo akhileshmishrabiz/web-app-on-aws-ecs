@@ -1,4 +1,4 @@
 bucket         = "366140438193-terraform-state"
-key            = "/dev/tfstate"
+key            = "dev/tfstate"
 region         = "ap-south-1"
 encrypt        = true

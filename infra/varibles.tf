@@ -8,7 +8,6 @@ variable "environment" {
   default = "dev"
 }
 
-variable "docker_username" {}
 
 variable "db_default_settings" {
   type = any

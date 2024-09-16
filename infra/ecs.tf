@@ -6,7 +6,7 @@ data "template_file" "python_app" {
     container_name                = var.app_name
     aws_cloudwatch_log_group_name = aws_cloudwatch_log_group.ecs.name
     database_address              = aws_db_instance.postgres.address
-    database_name                 = aws_db_instance.postgres.name
+    database_name                 = aws_db_instance.postgres.db_name
     postgres_username             = aws_db_instance.postgres.username
     postgres_password             = random_password.dbs_random_string.result
   }

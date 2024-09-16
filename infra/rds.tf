@@ -17,7 +17,7 @@ resource "aws_db_instance" "postgres" {
   identifier            = "${var.environment}-${var.app_name}-db"
   allocated_storage     = lookup(local.db_data, "allocated_storage", var.db_default_settings.allocated_storage)
   max_allocated_storage = lookup(local.db_data, "max_allocated_storage", var.db_default_settings.max_allocated_storage)
-  engine                = data.aws_rds_engine_version.postgresql.engine
+  engine                =  "postgres"
   engine_version        = lookup(local.db_data, "engine_version", var.db_default_settings.engine_version)
   instance_class        = lookup(local.db_data, "instance_class", var.db_default_settings.instance_class)
   username              = "postgres"
@@ -25,7 +25,6 @@ resource "aws_db_instance" "postgres" {
   port                  = 5432
   publicly_accessible   = false
   db_subnet_group_name  = aws_db_subnet_group.postgres.id
-  parameter_group_name  = aws_db_parameter_group.dbs_parameter_group.name
   ca_cert_identifier    = lookup(local.db_data, "ca_cert_name", var.db_default_settings.ca_cert_name)
   storage_encrypted     = true
   storage_type          = "gp3"
@@ -39,7 +38,6 @@ resource "aws_db_instance" "postgres" {
   auto_minor_version_upgrade      = true
   deletion_protection             = true
   monitoring_interval             = 60
-  monitoring_role_arn             = aws_iam_role.rds_monitoring_role.arn
   enabled_cloudwatch_logs_exports = lookup(local.db_data, "cloudwatch_logs", ["postgresql", "upgrade"])
   copy_tags_to_snapshot           = true
 
@@ -64,5 +62,43 @@ resource "aws_secretsmanager_secret_version" "dbs_secret_val" {
 
   lifecycle {
     create_before_destroy = true
+  }
+}
+
+resource "random_password" "dbs_random_string" {
+  length  = 16
+  special = true
+}
+
+resource "aws_security_group" "rds" {
+  name        = "${var.environment}-rds-sg"
+  description = "RDS security group"
+  vpc_id      = aws_vpc.main.id
+
+  tags = {
+    Name        = "${var.environment}-rds-sg"
+    Environment = var.environment
+  }
+}
+
+resource "aws_security_group_rule" "allow_ecs_to_rds" {
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.rds.id
+  source_security_group_id = aws_security_group.ecs_tasks.id
+}
+
+
+
+resource "aws_db_subnet_group" "postgres" {
+  name       = "${var.environment}-${var.app_name}-db-subnet-group"
+  description = "Subnet group for RDS instance"
+  subnet_ids = aws_subnet.rds.*.id
+
+  tags = {
+    Name        = "${var.environment}-${var.app_name}-db-subnet-group"
+    Environment = var.environment
   }
 }
