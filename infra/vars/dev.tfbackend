@@ -1,0 +1,5 @@
+bucket         = "your-dev-bucket-name"
+key            = "path/to/your/dev/key"
+region         = "your-region"
+encrypt        = true
+dynamodb_table = "your-dev-dynamodb-table"

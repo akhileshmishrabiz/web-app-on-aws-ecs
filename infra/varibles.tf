@@ -1,11 +1,11 @@
 variable "app_name" {
-  type = string
+  type    = string
   default = "web-app"
 }
 
 variable "environment" {
-  type = string
-  default  = "dev"
+  type    = string
+  default = "dev"
 }
 
 variable "docker_username" {}

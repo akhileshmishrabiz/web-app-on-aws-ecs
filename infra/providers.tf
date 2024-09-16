@@ -11,7 +11,7 @@ terraform {
     }
     template = {
       source  = "hashicorp/template"
-      version = "2.2.0"  # Update this to a compatible version
+      version = "2.2.0" # Update this to a compatible version
     }
   }
 }
@@ -20,9 +20,8 @@ provider "aws" {
   region = var.region
 }
 
-# Using local backend
+# Using S3 backend
 terraform {
-  backend "local" {
-    path = "terraform.tfstate"
+  backend "s3" {
   }
 }

@@ -34,14 +34,14 @@ resource "aws_db_instance" "postgres" {
     aws_security_group.rds.id
   ]
 
-  backup_retention_period               = lookup(local.db_data, "backup_retention_period", var.db_default_settings.backup_retention_period)
-  db_name                               = lookup(local.db_data, "db_name", var.db_default_settings.db_name)
-  auto_minor_version_upgrade            = true
-  deletion_protection                   = true
-  monitoring_interval                   = 60
-  monitoring_role_arn                   = aws_iam_role.rds_monitoring_role.arn
-  enabled_cloudwatch_logs_exports       = lookup(local.db_data, "cloudwatch_logs", ["postgresql", "upgrade"])
-  copy_tags_to_snapshot                 = true
+  backup_retention_period         = lookup(local.db_data, "backup_retention_period", var.db_default_settings.backup_retention_period)
+  db_name                         = lookup(local.db_data, "db_name", var.db_default_settings.db_name)
+  auto_minor_version_upgrade      = true
+  deletion_protection             = true
+  monitoring_interval             = 60
+  monitoring_role_arn             = aws_iam_role.rds_monitoring_role.arn
+  enabled_cloudwatch_logs_exports = lookup(local.db_data, "cloudwatch_logs", ["postgresql", "upgrade"])
+  copy_tags_to_snapshot           = true
 
   tags = {
     environment = var.environment

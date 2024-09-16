@@ -1,0 +1,5 @@
+bucket         = "your-prod-bucket-name"
+key            = "path/to/your/prod/key"
+region         = "your-region"
+encrypt        = true
+dynamodb_table = "your-prod-dynamodb-table"
