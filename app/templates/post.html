@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h2 class="my-4">{{ post.title }}</h2>
+    <p>{{ post.content }}</p>
+    <a href="{{ url_for('home') }}" class="btn btn-success">Back to Home</a>
+{% endblock %}
