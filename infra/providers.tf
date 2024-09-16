@@ -1,34 +1,11 @@
-terraform {
-  required_version = "1.8.1"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "5.50"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "3.4.3"
-    }
-  }
-}
-
 provider "aws" {
-  region = var.region
+  region = "us-east-1"
 }
 
-# Using local backend
 terraform {
-  backend "local" {
-    path = "terraform.tfstate"
+  backend "s3" {
+    bucket = "python-flask-app-tf-state"
+    key    = "terraform.tfstate"
+    region = "us-east-1"
   }
 }
-
-# terraform {
-#   backend "s3" {
-#     bucket         = "my-backend-devops101-terraform"
-#     key            = "tfstate/terraform.tfstate"
-#     region         = "ap-south-1"
-#     encrypt        = true
-#     #dynamodb_table = "terraform-lock-table"
-#   }
-# }

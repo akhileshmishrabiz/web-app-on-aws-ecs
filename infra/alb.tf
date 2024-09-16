@@ -1,69 +1,40 @@
-module "alb" {
-  source  = "terraform-aws-modules/alb/aws"
-  version = "~> 9.0"
-
-  name = local.name
-
+resource "aws_lb" "staging" {
+  name               = "alb"
+  subnets            = aws_subnet.public.*.id
   load_balancer_type = "application"
+  security_groups    = [aws_security_group.lb.id]
 
-  vpc_id  = module.vpc.vpc_id
-  subnets = module.vpc.public_subnets
-
-  # For example only
-  enable_deletion_protection = false
-
-  # Security Group
-  security_group_ingress_rules = {
-    all_http = {
-      from_port   = 80
-      to_port     = 80
-      ip_protocol = "tcp"
-      cidr_ipv4   = "0.0.0.0/0"
-    }
+  tags = {
+    Environment = var.environment
+    Application = var.app_name
   }
-  security_group_egress_rules = {
-    all = {
-      ip_protocol = "-1"
-      cidr_ipv4   = module.vpc.vpc_cidr_block
-    }
+}
+
+resource "aws_lb_listener" "https_forward" {
+  load_balancer_arn = aws_lb.staging.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.staging.arn
   }
+}
 
-  listeners = {
-    ex_http = {
-      port     = 80
-      protocol = "HTTP"
+resource "aws_lb_target_group" "staging" {
+  name        = "${var.app_name}-alb-tg"
+  port        = 80
+  protocol    = "HTTP"
+  vpc_id      = aws_vpc.default.id
+  target_type = "ip"
 
-      forward = {
-        target_group_key = "ex_ecs"
-      }
-    }
+  health_check {
+    healthy_threshold   = "3"
+    interval            = "90"
+    protocol            = "HTTP"
+    matcher             = "200-299"
+    timeout             = "20"
+    path                = "/"
+    unhealthy_threshold = "2"
   }
-
-  target_groups = {
-    ex_ecs = {
-      backend_protocol                  = "HTTP"
-      backend_port                      = local.container_port
-      target_type                       = "ip"
-      deregistration_delay              = 5
-      load_balancing_cross_zone_enabled = true
-
-      health_check = {
-        enabled             = true
-        healthy_threshold   = 5
-        interval            = 30
-        matcher             = "200"
-        path                = "/"
-        port                = "traffic-port"
-        protocol            = "HTTP"
-        timeout             = 5
-        unhealthy_threshold = 2
-      }
-
-      # There's nothing to attach here in this definition. Instead,
-      # ECS will attach the IPs of the tasks to this target group
-      create_attachment = false
-    }
-  }
-
-  tags = local.tags
 }
