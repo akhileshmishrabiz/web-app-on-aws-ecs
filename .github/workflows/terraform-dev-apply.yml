@@ -34,8 +34,8 @@ jobs:
 
       - name: Terraform Plan
         working-directory: ${{ env.TERRAFORM_PATH }}
-        run: terraform plan -var-file=vars/dev.tfvars -out=tfplan
+        run: terraform plan -var-file=vars/dev.tfvars 
 
       # - name: Terraform Apply
       #   working-directory: ${{ env.TERRAFORM_PATH }}
-      #   run: terraform apply -var-file=vars/dev.tfvars -auto-approve tfplan
+      #   run: terraform apply -var-file=vars/dev.tfvars -auto-approve
