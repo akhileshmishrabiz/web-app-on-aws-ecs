@@ -2,7 +2,7 @@ data "template_file" "python_app" {
   template = file("task-definitions/service.json.tpl")
   vars = {
     aws_ecr_repository            = aws_ecr_repository.python_app.repository_url
-    tag                           = "3.0"
+    tag                           = "4.0"
     container_name                = var.app_name
     aws_cloudwatch_log_group_name = aws_cloudwatch_log_group.ecs.name
     database_address              = aws_db_instance.postgres.address
@@ -45,7 +45,7 @@ resource "aws_ecs_service" "main" {
   load_balancer {
     target_group_arn = aws_lb_target_group.alb.arn
     container_name   = var.app_name
-    container_port   = 5000
+    container_port   = 8000
   }
 
   depends_on = [aws_lb_listener.https_forward, aws_iam_role_policy.ecs_task_execution_role]

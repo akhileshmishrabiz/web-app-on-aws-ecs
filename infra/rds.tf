@@ -23,8 +23,7 @@ resource "aws_db_instance" "postgres" {
   username              = "postgres"
   password              = random_password.dbs_random_string.result
   port                  = 5432
-  # publicly_accessible   = false
-  publicly_accessible   = true
+  publicly_accessible   = false
   db_subnet_group_name  = aws_db_subnet_group.postgres.id
   # ca_cert_identifier    = lookup(local.db_data, "ca_cert_name", var.db_default_settings.ca_cert_name)
   storage_encrypted = true
