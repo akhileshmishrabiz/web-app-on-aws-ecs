@@ -1,0 +1,121 @@
+name: "Build Test and Release"
+
+on:
+   # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - app/**
+  worlkflow_dispatch:
+
+env:
+  IMAGE_NAME: "flask-app"
+  ECR_REGISTRY: "366140438193.dkr.ecr.ap-south-1.amazonaws.com"
+  ECR_REPOSITORY: "dev-web-app"
+  ACCOUNT_ID: "366140438193"
+  ECS_CLUSTER: "dev-web-app-cluster"
+  ECS_REGION: "ap-south-1"
+  ECS_SERVICE: "dev-web-app-service"
+  ECS_TASK_DEFINITION: "dev-web-app"
+  ECS_APP_CONTAINER_NAME: "web-app"
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    ## Uncomment the services block below to run a postgres container for testing
+    # services:
+    #   postgres:
+    #     image: postgres
+    #     env:
+    #       POSTGRES_USER: postgres
+    #       POSTGRES_PASSWORD: postgres
+    #     options: >-
+    #       --health-cmd pg_isready
+    #       --health-interval 10s
+    #       --health-timeout 5s
+    #       --health-retries 5
+    #     ports:
+    #       - 5432:5432
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build docker container
+        uses: docker/build-push-action@v6
+        with:
+          file: app/Dockerfile
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          build-args: APP_VERSION=${{ github.sha }}
+          push: false
+      
+      ## Uncomment the following block to run tests
+      # - name: pytest and flake8
+    
+      #   configure aws credentials
+      - name: Configure AWS Credentials
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.ECS_REGION  }} 
+
+      - name: Login to Amazon ECR
+        if: ${{ github.ref == 'refs/heads/main' }}
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: true
+          registries: ${{ env.ACCOUNT_ID }}
+
+      - name: Push image to Amazon ECR
+        if: ${{ github.ref == 'refs/heads/main' }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker tag $IMAGE_NAME:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker tag $IMAGE_NAME:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
+
+      ## to run database migrations, uncomment the following block
+      # - name: Run database migrations
+      #   if: ${{ github.ref == 'refs/heads/main' }}
+      #   env:
+      #     ECS_REGION: ${{ env.ECS_REGION }}
+      #     ECS_CLUSTER: ${{ env.ECS_CLUSTER }}
+      #   run: |
+      #     aws ecs run-task --region $ECS_REGION --cluster ${ECS_CLUSTER} --task-definition cloudcity-dbmigrator --network-configuration 'awsvpcConfiguration={subnets=[subnet-0f7acac4123a12729,subnet-059ad6714175fc0b3,subnet-0223c7b0db91e659c],securityGroups=[sg-0855f21a11bb8433a],assignPublicIp=DISABLED}' --count 1
+
+      - name: Download task definition for web
+        if: ${{ github.ref == 'refs/heads/main' }}
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query taskDefinition > task-definition.json
+
+      - name: Fill in the new image ID for web in the Amazon ECS task definition
+        if: ${{ github.ref == 'refs/heads/main' }}
+        id: task-def-web
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.ECS_APP_CONTAINER_NAME }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest
+
+      - name: Deploy app on Amazon ECS task definition
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def-web.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+      
