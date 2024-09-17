@@ -6,7 +6,7 @@
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-region": "us-east-1",
+        "awslogs-region": "ap-south-1",
         "awslogs-stream-prefix": "${aws_cloudwatch_log_group_name}-service",
         "awslogs-group": "${aws_cloudwatch_log_group_name}"
       }
@@ -33,14 +33,14 @@
         "value": "${postgres_username}"
       },
       {
+        "name": "POSTGRES_PASSWORD",
+        "value": "${postgres_password}"
+      },
+      {
         "name": "ENV",
         "value": "PROD"
       }
     ],
-    "secrets": [{
-      "name": "POSTGRES_PASSWORD",
-      "valueFrom": "${postgres_password}"
-    }],
     "ulimits": [
       {
         "name": "nofile",

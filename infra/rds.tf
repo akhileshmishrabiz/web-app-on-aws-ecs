@@ -23,7 +23,8 @@ resource "aws_db_instance" "postgres" {
   username              = "postgres"
   password              = random_password.dbs_random_string.result
   port                  = 5432
-  publicly_accessible   = false
+  # publicly_accessible   = false
+  publicly_accessible   = true
   db_subnet_group_name  = aws_db_subnet_group.postgres.id
   # ca_cert_identifier    = lookup(local.db_data, "ca_cert_name", var.db_default_settings.ca_cert_name)
   storage_encrypted = true
@@ -71,26 +72,25 @@ resource "random_password" "dbs_random_string" {
 }
 
 resource "aws_security_group" "rds" {
-  name        = "${var.environment}-rds-sg"
-  description = "RDS security group"
+  name        = "rds-sg"
   vpc_id      = aws_vpc.main.id
+  description = "allow inbound access from the ECS only"
 
-  tags = {
-    Name        = "${var.environment}-rds-sg"
-    Environment = var.environment
+  ingress {
+    protocol        = "tcp"
+    from_port       = 5432
+    to_port         = 5432
+    cidr_blocks     = ["0.0.0.0/0"]
+    security_groups = [aws_security_group.ecs_tasks.id]
+  }
+
+  egress {
+    protocol    = "-1"
+    from_port   = 0
+    to_port     = 0
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
-resource "aws_security_group_rule" "allow_ecs_to_rds" {
-  type                     = "ingress"
-  from_port                = 5432
-  to_port                  = 5432
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.rds.id
-  source_security_group_id = aws_security_group.ecs_tasks.id
-}
-
-
 
 resource "aws_db_subnet_group" "postgres" {
   name        = "${var.environment}-${var.app_name}-db-subnet-group"

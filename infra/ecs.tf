@@ -2,7 +2,7 @@ data "template_file" "python_app" {
   template = file("task-definitions/service.json.tpl")
   vars = {
     aws_ecr_repository            = aws_ecr_repository.python_app.repository_url
-    tag                           = "latest"
+    tag                           = "3.0"
     container_name                = var.app_name
     aws_cloudwatch_log_group_name = aws_cloudwatch_log_group.ecs.name
     database_address              = aws_db_instance.postgres.address
@@ -25,6 +25,8 @@ resource "aws_ecs_task_definition" "main" {
     Application = var.app_name
   }
 }
+
+
 
 resource "aws_ecs_service" "main" {
   name                       = "${var.environment}-${var.app_name}-service"

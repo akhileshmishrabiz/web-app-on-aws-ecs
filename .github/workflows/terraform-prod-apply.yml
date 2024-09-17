@@ -1,1 +1,43 @@
-# for prod 
+name: Build Terraform on Prod Environment
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - infra/**
+  workflow_dispatch:
+
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ap-south-1
+      TERRAFORM_VER: 1.8.1
+      TERRAFORM_PATH: infra
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TERRAFORM_VER }}
+
+      - name: Terraform Init
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform init -backend-config=vars/prod.tfbackend
+
+      - name: Terraform Plan
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform plan -var-file=vars/prod.tfvars -out=tfplan
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform apply -var-file=vars/prod.tfvars -auto-approve tfplan

@@ -1,36 +1,43 @@
-name: Terraform Dev Environment
+name: Build Terraform on Dev Environment
+
 on:
   # push:
   #   branches:
   #     - main
-  # pull_request:
-  #   branches:
-  #     - main
+  #   paths:
+  #     - infra/**
+  workflow_dispatch:
+
   workflow_dispatch:
 
 jobs:
   terraform:
-    name: 'Terraform'
     runs-on: ubuntu-latest
 
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ap-south-1
+      TERRAFORM_VER: 1.8.1
+      TERRAFORM_PATH: infra
+
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.0.11
+          terraform_version: ${{ env.TERRAFORM_VER }}
 
       - name: Terraform Init
-        run: terraform init -backend-config=dev.tfbackend
-
-      - name: Terraform Lint
-        run: terraform fmt -check
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform init -backend-config=vars/dev.tfbackend
 
       - name: Terraform Plan
-        run: terraform plan -var-file=dev.tfvars
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform plan -var-file=vars/dev.tfvars -out=tfplan
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        run: terraform apply -auto-approve -var-file=dev.tfvars
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform apply -var-file=vars/dev.tfvars -auto-approve tfplan
