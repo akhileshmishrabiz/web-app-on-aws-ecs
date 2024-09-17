@@ -41,7 +41,7 @@ resource "aws_ecs_service" "main" {
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.staging.arn
+    target_group_arn = aws_lb_target_group.alb.arn
     container_name   = var.app_name
     container_port   = 5000
   }

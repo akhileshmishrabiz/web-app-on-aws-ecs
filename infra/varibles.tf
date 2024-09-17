@@ -19,6 +19,6 @@ variable "db_default_settings" {
     backup_retention_period = 2
     db_name                 = "postgres"
     ca_cert_name            = "rds-ca-rsa2048-g1"
-    db_admin_username       = "postgres"
+    db_admin_username       = "postgres_user"
   }
 }

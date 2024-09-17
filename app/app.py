@@ -6,6 +6,13 @@ app = Flask(__name__)
 app.config.from_object(Config)
 db.init_app(app)
 
+@app.before_request
+def create_tables():
+    # The following line will remove this handler, making it
+    # only run on the first request
+    app.before_request_funcs[None].remove(create_tables)
+    db.create_all()
+
 @app.route('/')
 def home():
     posts = Post.query.all()
@@ -28,6 +35,4 @@ def create_post():
     return render_template('create_post.html')
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
