@@ -49,8 +49,8 @@ jobs:
       - name: Build docker container
         uses: docker/build-push-action@v6
         with:
-          context: context: "{{defaultContext}}:app"
-          file: "{{defaultContext}}:app/Dockerfile"
+          context: "{{defaultContext}}:app"
+          # file: "{{defaultContext}}:app/Dockerfile"  # Uncomment this line if you have a Dockerfile in a different location
           tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           build-args: APP_VERSION=${{ github.sha }}
           push: false
