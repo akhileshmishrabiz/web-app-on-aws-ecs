@@ -1,4 +1,4 @@
-name: Build Terraform on Dev Environment
+name: Terraform apply on Dev Environment
 
 on:
   # push:
@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  terraform:
+  terraform-dev-apply:
     runs-on: ubuntu-latest
 
     env:
@@ -36,6 +36,6 @@ jobs:
         working-directory: ${{ env.TERRAFORM_PATH }}
         run: terraform plan -var-file=vars/dev.tfvars 
 
-      # - name: Terraform Apply
-      #   working-directory: ${{ env.TERRAFORM_PATH }}
-      #   run: terraform apply -var-file=vars/dev.tfvars -auto-approve
+      - name: Terraform Apply
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform apply -var-file=vars/dev.tfvars -auto-approve

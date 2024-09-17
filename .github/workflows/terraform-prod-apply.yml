@@ -1,4 +1,4 @@
-name: Build Terraform on Prod Environment
+name: Terraform apply on Prod Environment
 
 on:
   # push:
@@ -10,7 +10,7 @@ on:
 
 
 jobs:
-  terraform:
+  terraform-prod-apply:
     runs-on: ubuntu-latest
 
     env:
@@ -36,6 +36,7 @@ jobs:
       - name: Terraform Plan
         working-directory: ${{ env.TERRAFORM_PATH }}
         run: terraform plan -var-file=vars/prod.tfvars 
-      # - name: Terraform Apply
-      #   working-directory: ${{ env.TERRAFORM_PATH }}
-      #   run: terraform apply -var-file=vars/prod.tfvars -auto-approve
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TERRAFORM_PATH }}
+        run: terraform apply -var-file=vars/prod.tfvars -auto-approve
