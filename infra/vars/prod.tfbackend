@@ -1,4 +1,4 @@
 bucket         = "366140438193-terraform-state"
-key            = "/prod/tfstate"
+key            = "prod/tfstate"
 region         = "ap-south-1"
 encrypt        = true
