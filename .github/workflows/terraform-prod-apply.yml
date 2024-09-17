@@ -8,7 +8,6 @@ on:
   #     - infra/**
   workflow_dispatch:
 
-  workflow_dispatch:
 
 jobs:
   terraform:
