@@ -40,11 +40,18 @@ resource "aws_iam_role_policy" "ecs_task_execution_role" {
     {
         "Effect": "Allow",
         "Action": [
-            "secretsmanager:GetSecretValue"
+            "secretsmanager:*"
         ],
         "Resource": [
-            "${aws_secretsmanager_secret_version.dbs_secret_val.id}"
+            "*"
         ]
+    },
+    {
+        "Effect": "Allow",
+        "Action": [
+            "ssm:*"
+        ],
+        "Resource": "*"
     }
   ]
 }
