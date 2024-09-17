@@ -23,11 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application code into the container
 COPY . /app/
 
-# Expose the port the app runs on
-EXPOSE 5000
+# Expose the port that the app runs on
+EXPOSE 8000
 
-# Set environment variable for Flask
-ENV FLASK_APP=app.py
-
-# Run the Flask application
-CMD ["flask", "run", "--host=0.0.0.0"]
+# Command to run the application
+CMD ["uvicorn", "asgi:asgi_app", "--host", "0.0.0.0", "--port", "8000"]
