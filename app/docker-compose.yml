@@ -4,7 +4,7 @@ services:
   app:
     build: . # This will build the container from the Dockerfile stored locally.
     ports:
-      - "5000:5000"
+      - "8000:8000"
     networks:
       - cool_network 
     depends_on:
