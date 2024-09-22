@@ -10,9 +10,6 @@
         "containerPort": 80,
         "protocol": "tcp"
       }
-    ],
-    "links": [
-      "${container_name}"
     ]
   },
   {
