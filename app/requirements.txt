@@ -1,6 +1,15 @@
 Flask
 Flask-SQLAlchemy
 psycopg2-binary
-
-uvicorn 
+gunicorn 
 asgiref
+celery
+flask_mail
+itsdangerous
+Jinja2
+kombu
+MarkupSafe
+pytz
+redis
+vine
+Werkzeug

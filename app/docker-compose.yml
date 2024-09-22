@@ -3,15 +3,13 @@ version: '3.8'
 services:
   app:
     build: . # This will build the container from the Dockerfile stored locally.
-    ports:
-      - "8000:8000"
     networks:
       - cool_network 
     depends_on:
       db:
         condition: service_healthy   # will wait for db to be ready
-    links: 
-        - db
+      redis:
+        condition: service_healthy   # will wait for redis to be ready
 
   db:
     image: postgres:latest
@@ -32,6 +30,30 @@ services:
       timeout: 10s
       retries: 10
       start_period: 10s
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - cool_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      app:
+        condition: service_started
+    networks:
+      - cool_network
 
 volumes:
   postgres_data_new:
