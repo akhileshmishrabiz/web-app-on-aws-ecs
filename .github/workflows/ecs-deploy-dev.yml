@@ -11,12 +11,12 @@ on:
 env:
   IMAGE_NAME: "flask-app"
   ECR_REGISTRY: "366140438193.dkr.ecr.ap-south-1.amazonaws.com"
-  ECR_REPOSITORY: "dev-web-app"
+  ECR_REPOSITORY: "dev-app"
   ACCOUNT_ID: "366140438193"
-  ECS_CLUSTER: "dev-web-app-cluster"
+  ECS_CLUSTER: "dev-app-cluster"
   ECS_REGION: "ap-south-1"
-  ECS_SERVICE: "dev-web-app-service"
-  ECS_TASK_DEFINITION: "dev-web-app"
+  ECS_SERVICE: "dev-app-service"
+  ECS_TASK_DEFINITION: "dev-app"
   ECS_APP_CONTAINER_NAME: "app"
 
 jobs:
