@@ -46,7 +46,7 @@
         "protocol": "tcp"
       }
     ],
-    "cpu": 1,
+    "cpu": 256,
     "environment": [
       {
         "name": "DB_ADDRESS",
