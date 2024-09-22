@@ -1,34 +1,34 @@
 [
   {
-      "name": "nginx",
-      "image": "366140438193.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest",
-      "memory": 256,
-      "cpu": 256,
-      "essential": true,
-      "portMappings": [
-        {
-          "containerPort": 80,
-          "protocol": "tcp"
-        }
-      ],
-      "links": [
-        "${container_name}"
-      ]
-    },
-    {
-      "name": "redis",
-      "image": "redis:latest",
-      "memory": 256,
-      "cpu": 256,
-      "essential": true,
-      "portMappings": [
-        {
-          "containerPort": 6379,
-          "hostPort": 6379,
-          "protocol": "tcp"
-        }
-      ],
-    },
+    "name": "nginx",
+    "image": "366140438193.dkr.ecr.ap-south-1.amazonaws.com/nginx:latest",
+    "memory": 256,
+    "cpu": 256,
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 80,
+        "protocol": "tcp"
+      }
+    ],
+    "links": [
+      "${container_name}"
+    ]
+  },
+  {
+    "name": "redis",
+    "image": "redis:latest",
+    "memory": 256,
+    "cpu": 256,
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 6379,
+        "hostPort": 6379,
+        "protocol": "tcp"
+      }
+    ]
+  },
   {
     "name": "${container_name}",
     "image": "${aws_ecr_repository}:${tag}",
@@ -54,7 +54,7 @@
         "name": "DB_ADDRESS",
         "value": "${database_address}"
       },
-       {
+      {
         "name": "DB_NAME",
         "value": "${database_name}"
       },
