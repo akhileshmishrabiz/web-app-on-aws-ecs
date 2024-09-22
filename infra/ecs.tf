@@ -45,7 +45,7 @@ resource "aws_ecs_service" "main" {
   load_balancer {
     target_group_arn = aws_lb_target_group.alb.arn
     container_name   = var.app_name
-    container_port   = 8000
+    container_port   = 80
   }
 
   depends_on = [aws_lb_listener.https_forward, aws_iam_role_policy.ecs_task_execution_role]
