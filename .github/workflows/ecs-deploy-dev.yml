@@ -17,7 +17,7 @@ env:
   ECS_REGION: "ap-south-1"
   ECS_SERVICE: "dev-web-app-service"
   ECS_TASK_DEFINITION: "dev-web-app"
-  ECS_APP_CONTAINER_NAME: "web-app"
+  ECS_APP_CONTAINER_NAME: "app"
 
 jobs:
   build:

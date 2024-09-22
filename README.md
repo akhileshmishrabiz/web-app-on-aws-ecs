@@ -6,6 +6,8 @@ to run locally, run with postgres container
 
 docker run --name flask_postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=postgres -p 5432:5432 -d postgres
 
+redis: docker run --name flask_redis -p 6379:6379 -d redis
+
 # ecr login 
 
 aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 366140438193.dkr.ecr.ap-south-1.amazonaws.com

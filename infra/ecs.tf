@@ -2,7 +2,7 @@ data "template_file" "python_app" {
   template = file("task-definitions/service.json.tpl")
   vars = {
     aws_ecr_repository            = aws_ecr_repository.python_app.repository_url
-    tag                           = "4.0"
+    tag                           = "latest"
     container_name                = var.app_name
     aws_cloudwatch_log_group_name = aws_cloudwatch_log_group.ecs.name
     database_address              = aws_db_instance.postgres.address
@@ -16,8 +16,8 @@ resource "aws_ecs_task_definition" "main" {
   family                   = "${var.environment}-${var.app_name}"
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  cpu                      = 256
-  memory                   = 2048
+  cpu                      = 2048
+  memory                   = 4096
   requires_compatibilities = ["FARGATE"]
   container_definitions    = data.template_file.python_app.rendered
   tags = {
