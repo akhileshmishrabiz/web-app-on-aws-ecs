@@ -134,9 +134,4 @@ resource "aws_ecs_service" "redis_service" {
 
 resource "aws_ecs_cluster" "main" {
   name = "${var.environment}-${var.app_name}-cluster"
-
-  settings {
-    name  = "containerInsights"
-    value = "enabled"
-  }
 }
