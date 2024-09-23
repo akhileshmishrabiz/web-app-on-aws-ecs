@@ -9,4 +9,107 @@ locals {
     db_name                 = "mydb"
     cloudwatch_logs         = ["postgresql", "upgrade"]
   }
+
+  ecs_services = [
+    {
+      name            = "flask-app"
+      cpu             = 2048
+      memory          = 2048
+      template_file   = "task-definitions/flask-service.json.tpl"
+      service_connect = {
+        namespace = "${var.environment}-namespace"
+        services = [
+          {
+            port_name      = "flask"
+            port           = 8080
+            discovery_name = "flask-app"
+          }
+        ]
+      }
+      vars            = {
+        aws_ecr_repository            = aws_ecr_repository.python_app.repository_url
+        tag                           = "latest"
+        container_name                = "flask-app"
+        port                          = 8080
+        aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-flask-app"
+        database_address              = aws_db_instance.postgres.address
+        database_name                 = aws_db_instance.postgres.db_name
+        postgres_username             = aws_db_instance.postgres.username
+        postgres_password             = random_password.dbs_random_string.result
+        environment                   = var.environment
+      }
+    },
+    {
+      name            = "nginx"
+      cpu             = 2048
+      memory          = 2048
+      template_file   = "task-definitions/nginx-service.json.tpl"
+      service_connect = {
+        namespace = "${var.environment}-namespace"
+        services = [
+          {
+            port_name      = "nginx"
+            port           = 80
+            discovery_name = "nginx"
+          }
+        ]
+      }
+      vars            = {
+        aws_ecr_repository            = "366140438193.dkr.ecr.ap-south-1.amazonaws.com/nginx"
+        tag                           = "latest"
+        container_name                = "nginx"
+        port                          = 80
+        aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-nginx"
+        environment                   = var.environment
+      }
+    },
+    {
+      name            = "redis"
+      cpu             = 2048
+      memory          = 2048
+      template_file   = "task-definitions/redis-service.json.tpl"
+      service_connect = {
+        namespace = "${var.environment}-namespace"
+        services = [
+          {
+            port_name      = "redis"
+            port           = 6379
+            discovery_name = "redis"
+          }
+        ]
+      }
+      vars            = {
+        aws_ecr_repository            = "redis"
+        tag                           = "latest"
+        container_name                = "redis"
+        aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-redis"
+        environment                   = var.environment
+      }
+    }
+  ]
+}
+
+
+resource "aws_cloudwatch_log_group" "ecs" {
+  for_each = { for service in local.ecs_services : service.name => service }
+
+  name              = "/aws/ecs/${var.environment}-${each.value.name}"
+  retention_in_days = 30
+}
+
+resource "aws_cloudwatch_query_definition" "ecs" {
+  for_each = { for service in local.ecs_services : service.name => service }
+
+  name = "${var.environment}-${each.value.name}"
+
+  log_group_names = [
+    aws_cloudwatch_log_group.ecs[each.key].name,
+  ]
+
+  query_string = <<-EOF
+    filter @message not like /.+Waiting.+/
+    | fields @timestamp, @message
+    | sort @timestamp desc
+    | limit 200
+  EOF
 }

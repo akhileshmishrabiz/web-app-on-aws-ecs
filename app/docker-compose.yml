@@ -6,8 +6,8 @@ services:
     networks:
       - cool_network 
     depends_on:
-      db:
-        condition: service_healthy   # will wait for db to be ready
+      # db:
+      #   condition: service_healthy   # will wait for db to be ready
       redis:
         condition: service_healthy   # will wait for redis to be ready
 
@@ -48,7 +48,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       app:
         condition: service_started
