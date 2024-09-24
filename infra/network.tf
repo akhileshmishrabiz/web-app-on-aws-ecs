@@ -108,7 +108,7 @@ resource "aws_security_group" "ecs_tasks" {
   description = "allow inbound access from the ALB only"
 
   ingress {
-    protocol    = "tcp"
+    protocol    = "-1"
     from_port   = 0
     to_port     = 0
     cidr_blocks = ["0.0.0.0/0"]
