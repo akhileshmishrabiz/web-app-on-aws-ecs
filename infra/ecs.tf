@@ -33,7 +33,7 @@ resource "aws_ecs_service" "flask_app_service" {
     assign_public_ip = true
   }
 
-  service_connect_configuration = {
+  service_connect_configuration {
     namespace = aws_service_discovery_http_namespace.main.arn
     service = {
       client_alias = {
@@ -69,7 +69,7 @@ resource "aws_ecs_service" "nginx_service" {
     assign_public_ip = true
   }
 
-  service_connect_configuration = {
+  service_connect_configuration {
     namespace = aws_service_discovery_http_namespace.main.arn
     service = {
       client_alias = {
@@ -115,7 +115,7 @@ resource "aws_ecs_service" "redis_service" {
     assign_public_ip = true
   }
 
-  service_connect_configuration = {
+  service_connect_configuration {
     namespace = aws_service_discovery_http_namespace.main.arn
     service = {
       client_alias = {
