@@ -15,10 +15,13 @@
       {
         "containerPort": 80,
         "hostPort": 80,
-        "protocol": "tcp"
+        "protocol": "tcp",
+        "name": "nginx",
+        "appProtocol": "http"
+
       }
     ],
-    "cpu": 1024,
+    "cpu": 256,
     "environment": [
       {
         "name": "ENV",

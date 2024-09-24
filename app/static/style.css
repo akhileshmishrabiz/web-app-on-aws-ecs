@@ -1,0 +1,43 @@
+/* General Styles */
+body {
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: #28a745;
+}
+
+.navbar a {
+    color: white !important;
+}
+
+/* Container Styles */
+.container {
+    margin-top: 20px;
+}
+
+/* Additional Styles */
+.navbar-brand {
+    font-weight: bold;
+}
+
+.nav-link {
+    font-size: 1.1em;
+}
+
+.nav-item.active .nav-link {
+    font-weight: bold;
+    color: #ffffff !important;
+}
+
+.footer {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+}

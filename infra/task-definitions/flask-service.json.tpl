@@ -15,10 +15,12 @@
       {
         "containerPort": 8080,
         "hostPort": 8080,
-        "protocol": "tcp"
+        "protocol": "tcp",
+        "name": "app",
+        "appProtocol": "http"
       }
     ],
-    "cpu": 1024,
+    "cpu": 256,
     "environment": [
       {
         "name": "DB_ADDRESS",

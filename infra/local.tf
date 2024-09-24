@@ -13,7 +13,7 @@ locals {
   ecs_services = [
     {
       name          = "flask-app"
-      cpu           = 2048
+      cpu           = 1024
       memory        = 2048
       template_file = "task-definitions/flask-service.json.tpl"
       vars = {
@@ -30,7 +30,7 @@ locals {
     },
     {
       name          = "nginx"
-      cpu           = 2048
+      cpu           = 1024
       memory        = 2048
       template_file = "task-definitions/nginx-service.json.tpl"
       vars = {
@@ -43,7 +43,7 @@ locals {
     },
     {
       name          = "redis"
-      cpu           = 2048
+      cpu           = 1024
       memory        = 2048
       template_file = "task-definitions/redis-service.json.tpl"
       vars = {

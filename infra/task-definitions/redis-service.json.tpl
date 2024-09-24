@@ -15,10 +15,11 @@
       {
         "containerPort": 6379,
         "hostPort": 6379,
-        "protocol": "tcp"
+        "protocol": "tcp",
+        "name": "redis"
       }
     ],
-    "cpu": 1024,
+    "cpu": 256,
     "environment": [
       {
         "name": "ENV",
