@@ -34,9 +34,10 @@ resource "aws_ecs_service" "flask_app_service" {
   }
 
   service_connect_configuration {
+    enabled  = true
     namespace = aws_service_discovery_http_namespace.main.arn
-    service = {
-      client_alias = {
+    service {
+      client_alias {
         port     = 8080
         dns_name = "flask-app"
       }
@@ -70,9 +71,10 @@ resource "aws_ecs_service" "nginx_service" {
   }
 
   service_connect_configuration {
+    enabled  = true
     namespace = aws_service_discovery_http_namespace.main.arn
-    service = {
-      client_alias = {
+    service {
+      client_alias {
         port     = 80
         dns_name = "nginx"
       }
@@ -116,9 +118,10 @@ resource "aws_ecs_service" "redis_service" {
   }
 
   service_connect_configuration {
+    enabled  = true
     namespace = aws_service_discovery_http_namespace.main.arn
-    service = {
-      client_alias = {
+    service {
+      client_alias{
         port     = 6379
         dns_name = "redis"
       }
