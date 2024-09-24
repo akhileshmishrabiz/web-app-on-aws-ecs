@@ -12,10 +12,10 @@ locals {
 
   ecs_services = [
     {
-      name            = "flask-app"
-      cpu             = 2048
-      memory          = 2048
-      template_file   = "task-definitions/flask-service.json.tpl"
+      name          = "flask-app"
+      cpu           = 2048
+      memory        = 2048
+      template_file = "task-definitions/flask-service.json.tpl"
       service_connect = {
         namespace = "${var.environment}-namespace"
         services = [
@@ -26,7 +26,7 @@ locals {
           }
         ]
       }
-      vars            = {
+      vars = {
         aws_ecr_repository            = aws_ecr_repository.python_app.repository_url
         tag                           = "latest"
         container_name                = "flask-app"
@@ -40,10 +40,10 @@ locals {
       }
     },
     {
-      name            = "nginx"
-      cpu             = 2048
-      memory          = 2048
-      template_file   = "task-definitions/nginx-service.json.tpl"
+      name          = "nginx"
+      cpu           = 2048
+      memory        = 2048
+      template_file = "task-definitions/nginx-service.json.tpl"
       service_connect = {
         namespace = "${var.environment}-namespace"
         services = [
@@ -54,7 +54,7 @@ locals {
           }
         ]
       }
-      vars            = {
+      vars = {
         aws_ecr_repository            = "366140438193.dkr.ecr.ap-south-1.amazonaws.com/nginx"
         tag                           = "latest"
         container_name                = "nginx"
@@ -64,10 +64,10 @@ locals {
       }
     },
     {
-      name            = "redis"
-      cpu             = 2048
-      memory          = 2048
-      template_file   = "task-definitions/redis-service.json.tpl"
+      name          = "redis"
+      cpu           = 2048
+      memory        = 2048
+      template_file = "task-definitions/redis-service.json.tpl"
       service_connect = {
         namespace = "${var.environment}-namespace"
         services = [
@@ -78,7 +78,7 @@ locals {
           }
         ]
       }
-      vars            = {
+      vars = {
         aws_ecr_repository            = "redis"
         tag                           = "latest"
         container_name                = "redis"

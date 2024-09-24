@@ -5,14 +5,14 @@ data "template_file" "services" {
 }
 
 resource "aws_ecs_task_definition" "services" {
-  for_each                = { for service in local.ecs_services : service.name => service }
-  family                  = "${var.environment}-${each.key}"
-  network_mode            = "awsvpc"
-  execution_role_arn      = aws_iam_role.ecs_task_execution_role.arn
-  cpu                     = each.value.cpu
-  memory                  = each.value.memory
+  for_each                 = { for service in local.ecs_services : service.name => service }
+  family                   = "${var.environment}-${each.key}"
+  network_mode             = "awsvpc"
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
+  cpu                      = each.value.cpu
+  memory                   = each.value.memory
   requires_compatibilities = ["FARGATE"]
-  container_definitions   = data.template_file.services[each.key].rendered
+  container_definitions    = data.template_file.services[each.key].rendered
   tags = {
     Environment = var.environment
     Application = each.key
@@ -20,12 +20,12 @@ resource "aws_ecs_task_definition" "services" {
 }
 
 resource "aws_ecs_service" "flask_app_service" {
-  name                      = "${var.environment}-flask-app-service"
-  cluster                   = aws_ecs_cluster.main.id
-  task_definition           = aws_ecs_task_definition.services["flask-app"].arn
-  desired_count             = 1
+  name                       = "${var.environment}-flask-app-service"
+  cluster                    = aws_ecs_cluster.main.id
+  task_definition            = aws_ecs_task_definition.services["flask-app"].arn
+  desired_count              = 1
   deployment_maximum_percent = 250
-  launch_type               = "FARGATE"
+  launch_type                = "FARGATE"
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks.id]
@@ -33,16 +33,21 @@ resource "aws_ecs_service" "flask_app_service" {
     assign_public_ip = true
   }
 
-  service_connect {
-    namespace = local.ecs_services[0].service_connect.namespace
-    services = [
-      for svc in local.ecs_services[0].service_connect.services : {
-        port_name      = svc.port_name
-        port           = svc.port
-        discovery_name = svc.discovery_name
+  service_connect_configuration = {
+    namespace = aws_service_discovery_http_namespace.main.arn
+    service = {
+      client_alias = {
+        port     = 8080
+        dns_name = "flask-app"
       }
-    ]
+      port_name      = "flask-app"
+      discovery_name = "flask-app"
+    }
   }
+  depends_on = [
+    aws_iam_role_policy.ecs_task_execution_role,
+    aws_ecs_service.redis_service
+  ]
 
   tags = {
     Environment = var.environment
@@ -51,12 +56,12 @@ resource "aws_ecs_service" "flask_app_service" {
 }
 
 resource "aws_ecs_service" "nginx_service" {
-  name                      = "${var.environment}-nginx-service"
-  cluster                   = aws_ecs_cluster.main.id
-  task_definition           = aws_ecs_task_definition.services["nginx"].arn
-  desired_count             = 1
+  name                       = "${var.environment}-nginx-service"
+  cluster                    = aws_ecs_cluster.main.id
+  task_definition            = aws_ecs_task_definition.services["nginx"].arn
+  desired_count              = 1
   deployment_maximum_percent = 250
-  launch_type               = "FARGATE"
+  launch_type                = "FARGATE"
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks.id]
@@ -64,23 +69,23 @@ resource "aws_ecs_service" "nginx_service" {
     assign_public_ip = true
   }
 
-  service_connect {
-    namespace = local.ecs_services[1].service_connect.namespace
-    services = [
-      for svc in local.ecs_services[1].service_connect.services : {
-        port_name      = svc.port_name
-        port           = svc.port
-        discovery_name = svc.discovery_name
+  service_connect_configuration = {
+    namespace = aws_service_discovery_http_namespace.main.arn
+    service = {
+      client_alias = {
+        port     = 80
+        dns_name = "nginx"
       }
-    ]
+      port_name      = "nginx"
+      discovery_name = "nginx"
+    }
   }
 
-  dynamic "load_balancer" {
-    for_each = local.ecs_services[1].container_name == "nginx" && local.ecs_services[1].vars.port == 80 ? [1] : []
-    content {
+  load_balancer = {
+    service = {
       target_group_arn = aws_lb_target_group.alb.arn
-      container_name   = local.ecs_services[1].container_name
-      container_port   = local.ecs_services[1].vars.port
+      container_name   = "nginx"
+      container_port   = 80
     }
   }
 
@@ -97,12 +102,12 @@ resource "aws_ecs_service" "nginx_service" {
 }
 
 resource "aws_ecs_service" "redis_service" {
-  name                      = "${var.environment}-redis-service"
-  cluster                   = aws_ecs_cluster.main.id
-  task_definition           = aws_ecs_task_definition.services["redis"].arn
-  desired_count             = 1
+  name                       = "${var.environment}-redis-service"
+  cluster                    = aws_ecs_cluster.main.id
+  task_definition            = aws_ecs_task_definition.services["redis"].arn
+  desired_count              = 1
   deployment_maximum_percent = 250
-  launch_type               = "FARGATE"
+  launch_type                = "FARGATE"
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks.id]
@@ -110,20 +115,20 @@ resource "aws_ecs_service" "redis_service" {
     assign_public_ip = true
   }
 
-  service_connect {
-    namespace = local.ecs_services[2].service_connect.namespace
-    services = [
-      for svc in local.ecs_services[2].service_connect.services : {
-        port_name      = svc.port_name
-        port           = svc.port
-        discovery_name = svc.discovery_name
+  service_connect_configuration = {
+    namespace = aws_service_discovery_http_namespace.main.arn
+    service = {
+      client_alias = {
+        port     = 6379
+        dns_name = "redis"
       }
-    ]
+      port_name      = "redis"
+      discovery_name = "redis"
+    }
   }
 
   depends_on = [
     aws_iam_role_policy.ecs_task_execution_role,
-    aws_ecs_service.nginx_service
   ]
 
   tags = {
@@ -134,4 +139,12 @@ resource "aws_ecs_service" "redis_service" {
 
 resource "aws_ecs_cluster" "main" {
   name = "${var.environment}-${var.app_name}-cluster"
+  service_connect_defaults {
+    namespace = aws_service_discovery_http_namespace.main.arn
+  }
+}
+
+resource "aws_service_discovery_http_namespace" "main" {
+  name        = "${var.environment}-${var.app_name}-namespace"
+  description = "Dev name space"
 }
