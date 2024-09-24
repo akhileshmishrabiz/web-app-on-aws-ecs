@@ -16,21 +16,10 @@ locals {
       cpu           = 2048
       memory        = 2048
       template_file = "task-definitions/flask-service.json.tpl"
-      service_connect = {
-        namespace = "${var.environment}-namespace"
-        services = [
-          {
-            port_name      = "flask"
-            port           = 8080
-            discovery_name = "flask-app"
-          }
-        ]
-      }
       vars = {
         aws_ecr_repository            = aws_ecr_repository.python_app.repository_url
         tag                           = "latest"
         container_name                = "flask-app"
-        port                          = 8080
         aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-flask-app"
         database_address              = aws_db_instance.postgres.address
         database_name                 = aws_db_instance.postgres.db_name
@@ -44,21 +33,10 @@ locals {
       cpu           = 2048
       memory        = 2048
       template_file = "task-definitions/nginx-service.json.tpl"
-      service_connect = {
-        namespace = "${var.environment}-namespace"
-        services = [
-          {
-            port_name      = "nginx"
-            port           = 80
-            discovery_name = "nginx"
-          }
-        ]
-      }
       vars = {
         aws_ecr_repository            = "366140438193.dkr.ecr.ap-south-1.amazonaws.com/nginx"
         tag                           = "latest"
         container_name                = "nginx"
-        port                          = 80
         aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-nginx"
         environment                   = var.environment
       }
@@ -68,16 +46,6 @@ locals {
       cpu           = 2048
       memory        = 2048
       template_file = "task-definitions/redis-service.json.tpl"
-      service_connect = {
-        namespace = "${var.environment}-namespace"
-        services = [
-          {
-            port_name      = "redis"
-            port           = 6379
-            discovery_name = "redis"
-          }
-        ]
-      }
       vars = {
         aws_ecr_repository            = "redis"
         tag                           = "latest"

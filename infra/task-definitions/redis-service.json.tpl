@@ -13,8 +13,8 @@
     },
     "portMappings": [
       {
-        "containerPort": "${port}",
-        "hostPort": "${port}",
+        "containerPort": 6379,
+        "hostPort": 6379,
         "protocol": "tcp"
       }
     ],

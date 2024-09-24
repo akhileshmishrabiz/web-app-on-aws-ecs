@@ -34,15 +34,15 @@ resource "aws_ecs_service" "flask_app_service" {
   }
 
   service_connect_configuration {
-    enabled  = true
+    enabled   = true
     namespace = aws_service_discovery_http_namespace.main.arn
     service {
       client_alias {
         port     = 8080
-        dns_name = "flask-app"
+        dns_name = "app"
       }
-      port_name      = "flask-app"
-      discovery_name = "flask-app"
+      port_name      = "app"
+      discovery_name = "app"
     }
   }
   depends_on = [
@@ -71,7 +71,7 @@ resource "aws_ecs_service" "nginx_service" {
   }
 
   service_connect_configuration {
-    enabled  = true
+    enabled   = true
     namespace = aws_service_discovery_http_namespace.main.arn
     service {
       client_alias {
@@ -83,12 +83,10 @@ resource "aws_ecs_service" "nginx_service" {
     }
   }
 
-  load_balancer = {
-    service = {
-      target_group_arn = aws_lb_target_group.alb.arn
-      container_name   = "nginx"
-      container_port   = 80
-    }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.alb.arn
+    container_name   = "nginx"
+    container_port   = 80
   }
 
   depends_on = [
@@ -118,10 +116,10 @@ resource "aws_ecs_service" "redis_service" {
   }
 
   service_connect_configuration {
-    enabled  = true
+    enabled   = true
     namespace = aws_service_discovery_http_namespace.main.arn
     service {
-      client_alias{
+      client_alias {
         port     = 6379
         dns_name = "redis"
       }
