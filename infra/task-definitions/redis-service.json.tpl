@@ -19,22 +19,12 @@
         "name": "redis"
       }
     ],
-    "cpu": 256,
     "environment": [
       {
         "name": "ENV",
         "value": "${environment}"
       }
     ],
-    "ulimits": [
-      {
-        "name": "nofile",
-        "softLimit": 65536,
-        "hardLimit": 65536
-      }
-    ],
-    "mountPoints": [],
-    "memory": 2048,
-    "volumesFrom": []
+
   }
 ]

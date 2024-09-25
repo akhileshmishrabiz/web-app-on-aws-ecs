@@ -23,13 +23,13 @@ resource "aws_ecs_service" "flask_app_service" {
   name                       = "${var.environment}-flask-app-service"
   cluster                    = aws_ecs_cluster.main.id
   task_definition            = aws_ecs_task_definition.services["flask-app"].arn
-  desired_count              = 1
+  desired_count              = 2
   deployment_maximum_percent = 250
   launch_type                = "FARGATE"
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks.id]
-    subnets          = aws_subnet.private.*.id
+    subnets          = aws_subnet.public.*.id
     assign_public_ip = true
   }
 
@@ -37,12 +37,7 @@ resource "aws_ecs_service" "flask_app_service" {
     enabled   = true
     namespace = aws_service_discovery_http_namespace.main.arn
     service {
-      client_alias {
-        port     = 8080
-        dns_name = "app"
-      }
       port_name      = "app"
-      discovery_name = "app"
     }
   }
   depends_on = [
@@ -74,12 +69,7 @@ resource "aws_ecs_service" "nginx_service" {
     enabled   = true
     namespace = aws_service_discovery_http_namespace.main.arn
     service {
-      client_alias {
-        port     = 80
-        dns_name = "nginx"
-      }
       port_name      = "nginx"
-      discovery_name = "nginx"
     }
   }
 
@@ -105,13 +95,13 @@ resource "aws_ecs_service" "redis_service" {
   name                       = "${var.environment}-redis-service"
   cluster                    = aws_ecs_cluster.main.id
   task_definition            = aws_ecs_task_definition.services["redis"].arn
-  desired_count              = 1
+  desired_count              = 2
   deployment_maximum_percent = 250
   launch_type                = "FARGATE"
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks.id]
-    subnets          = aws_subnet.private.*.id
+    subnets          = aws_subnet.public.*.id
     assign_public_ip = true
   }
 
@@ -119,12 +109,7 @@ resource "aws_ecs_service" "redis_service" {
     enabled   = true
     namespace = aws_service_discovery_http_namespace.main.arn
     service {
-      client_alias {
-        port     = 6379
-        dns_name = "redis"
-      }
       port_name      = "redis"
-      discovery_name = "redis"
     }
   }
 

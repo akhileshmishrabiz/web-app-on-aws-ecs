@@ -20,7 +20,6 @@
         "appProtocol": "http"
       }
     ],
-    "cpu": 256,
     "environment": [
       {
         "name": "DB_ADDRESS",
@@ -43,15 +42,5 @@
         "value": "${environment}"
       }
     ],
-    "ulimits": [
-      {
-        "name": "nofile",
-        "softLimit": 65536,
-        "hardLimit": 65536
-      }
-    ],
-    "mountPoints": [],
-    "memory": 2048,
-    "volumesFrom": []
   }
 ]

@@ -13,12 +13,12 @@ data "aws_iam_policy_document" "ecs_task_execution_role" {
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = "ecs-staging-execution-role"
+  name               = "${var.environment}-ecs-task-execution-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_execution_role.json
 }
 
 resource "aws_iam_role_policy" "ecs_task_execution_role" {
-  name = "ecs_task_execution_policy"
+  name = "${var.environment}-ecs_task_execution_policy"
   role = aws_iam_role.ecs_task_execution_role.id
 
   policy = <<EOF
@@ -57,4 +57,9 @@ resource "aws_iam_role_policy" "ecs_task_execution_role" {
 }
 
 EOF
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_attachment" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
