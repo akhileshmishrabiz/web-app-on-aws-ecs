@@ -37,7 +37,11 @@ resource "aws_ecs_service" "flask_app_service" {
     enabled   = true
     namespace = aws_service_discovery_http_namespace.main.arn
     service {
-      port_name      = "app"
+      port_name = "app"
+      client_alias {
+        port     = 8080
+        dns_name = "app"
+      }
     }
   }
   depends_on = [
@@ -55,7 +59,7 @@ resource "aws_ecs_service" "nginx_service" {
   name                       = "${var.environment}-nginx-service"
   cluster                    = aws_ecs_cluster.main.id
   task_definition            = aws_ecs_task_definition.services["nginx"].arn
-  desired_count              = 1
+  desired_count              = 2
   deployment_maximum_percent = 250
   launch_type                = "FARGATE"
 
@@ -69,7 +73,11 @@ resource "aws_ecs_service" "nginx_service" {
     enabled   = true
     namespace = aws_service_discovery_http_namespace.main.arn
     service {
-      port_name      = "nginx"
+      port_name = "nginx"
+      client_alias {
+        port     = 80
+        dns_name = "nginx"
+      }
     }
   }
 
@@ -109,7 +117,11 @@ resource "aws_ecs_service" "redis_service" {
     enabled   = true
     namespace = aws_service_discovery_http_namespace.main.arn
     service {
-      port_name      = "redis"
+      client_alias {
+        port     = 6379
+        dns_name = "redis"
+      }
+      port_name = "redis"
     }
   }
 
