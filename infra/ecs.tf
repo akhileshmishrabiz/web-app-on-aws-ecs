@@ -81,11 +81,11 @@ resource "aws_ecs_service" "nginx_service" {
     }
   }
 
-  # load_balancer {
-  #   target_group_arn = aws_lb_target_group.alb.arn
-  #   container_name   = "nginx"
-  #   container_port   = 80
-  # }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.alb.arn
+    container_name   = "nginx"
+    container_port   = 80
+  }
 
   depends_on = [
     aws_lb_listener.https_forward,
