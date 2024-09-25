@@ -41,6 +41,6 @@
         "name": "ENV",
         "value": "${environment}"
       }
-    ],
+    ]
   }
 ]
