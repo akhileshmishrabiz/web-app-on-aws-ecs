@@ -46,8 +46,8 @@ jobs:
 
       - name: test env names
         run: |
-         echo {{ env.ECR_REGISTRY }}
-         echo {{ env.ECS_CLUSTER }}
+         echo ${{ env.ECR_REGISTRY }}
+         echo ${{ env.ECS_CLUSTER }}
 
       # - name: Build docker container
       #   uses: docker/build-push-action@v6
