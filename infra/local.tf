@@ -64,7 +64,7 @@ locals {
   ECS_CLUSTER: "${var.environment}-app-cluster"
   ECS_REGION: "ap-south-1"
   ECS_SERVICE: "${var.environment}-flask-app-service"
-  ECS_TASK_DEFINITION: ${var.environment}-flask-app"
+  ECS_TASK_DEFINITION: "${var.environment}-flask-app"
   ECS_APP_CONTAINER_NAME: "flask-app"
   }
 }
@@ -77,5 +77,5 @@ resource "aws_secretsmanager_secret" "app_deploy_data" {
 
 resource "aws_secretsmanager_secret_version" "app_deploy_data_version" {
   secret_id     = aws_secretsmanager_secret.app_deploy_data.id
-  secret_string = local.app_deploy_data
+  secret_string = jsonencode(local.app_deploy_data)
 }

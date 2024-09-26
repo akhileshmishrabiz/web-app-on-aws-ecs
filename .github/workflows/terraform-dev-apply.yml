@@ -1,12 +1,12 @@
 name: Terraform apply on Dev Environment
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - infra/**
-  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - infra/**
+  # workflow_dispatch:
 
 jobs:
   terraform-dev-apply:
