@@ -1,9 +1,9 @@
 name: "Dev App Build, Test and Release"
 
 on:
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
   #   paths:
   #     - app/**
   workflow_dispatch:
@@ -31,7 +31,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.ECS_REGION }}
+          aws-region: ${{ env.region }}
 
       - name: Fetch secrets from AWS Secrets Manager
         id: fetch-secrets
