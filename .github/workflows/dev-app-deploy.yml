@@ -41,19 +41,13 @@ jobs:
             ,${{ env.environment }}-${{ env.secret }}
           parse-json-secrets: true
 
-      - name: Set environment variables
-        run: |
-          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
-          echo "ECR_REGISTRY=$ECR_REGISTRY" >> $GITHUB_ENV
-          echo "ECR_REPOSITORY=$ECR_REPOSITORY" >> $GITHUB_ENV
-          echo "ACCOUNT_ID=$ACCOUNT_ID" >> $GITHUB_ENV
-          echo "ECS_CLUSTER=$ECS_CLUSTER" >> $GITHUB_ENV
-          echo "ECS_REGION=$ECS_REGION" >> $GITHUB_ENV
-          echo "ECS_SERVICE=$ECS_SERVICE" >> $GITHUB_ENV
-          echo "ECS_TASK_DEFINITION=$ECS_TASK_DEFINITION" >> $GITHUB_ENV
-          echo "ECS_APP_CONTAINER_NAME=$ECS_APP_CONTAINER_NAME" >> $GITHUB_ENV
       - name: Print GITHUB_ENV
         run: cat $GITHUB_ENV 
+
+      - name: test env names
+        run: |
+         echo {{ env.ECR_REGISTRY }}
+         echo {{ env.ECS_CLUSTER }}
 
       # - name: Build docker container
       #   uses: docker/build-push-action@v6
