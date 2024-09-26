@@ -55,29 +55,27 @@ locals {
       }
     }
   ]
+
+  app_deploy_data ={
+  IMAGE_NAME: "flask-app"
+  ECR_REGISTRY: "366140438193.dkr.ecr.ap-south-1.amazonaws.com"
+  ECR_REPOSITORY: "${var.environment}-app"
+  ACCOUNT_ID: "366140438193"
+  ECS_CLUSTER: "${var.environment}-app-cluster"
+  ECS_REGION: "ap-south-1"
+  ECS_SERVICE: "${var.environment}-flask-app-service"
+  ECS_TASK_DEFINITION: ${var.environment}-flask-app"
+  ECS_APP_CONTAINER_NAME: "flask-app"
+  }
 }
 
 
-resource "aws_cloudwatch_log_group" "ecs" {
-  for_each = { for service in local.ecs_services : service.name => service }
-
-  name              = "/aws/ecs/${var.environment}-${each.value.name}"
-  retention_in_days = 30
+resource "aws_secretsmanager_secret" "app_deploy_data" {
+  name        = "${var.environment}-app-deploy-data"
+  description = "Deployment data for the Flask app"
 }
 
-resource "aws_cloudwatch_query_definition" "ecs" {
-  for_each = { for service in local.ecs_services : service.name => service }
-
-  name = "${var.environment}-${each.value.name}"
-
-  log_group_names = [
-    aws_cloudwatch_log_group.ecs[each.key].name,
-  ]
-
-  query_string = <<-EOF
-    filter @message not like /.+Waiting.+/
-    | fields @timestamp, @message
-    | sort @timestamp desc
-    | limit 200
-  EOF
+resource "aws_secretsmanager_secret_version" "app_deploy_data_version" {
+  secret_id     = aws_secretsmanager_secret.app_deploy_data.id
+  secret_string = local.app_deploy_data
 }
