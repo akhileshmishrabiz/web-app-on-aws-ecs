@@ -38,7 +38,7 @@ jobs:
         uses: aws-actions/aws-secretsmanager-get-secret-value@v1
         with:
           secret-id: ${{ env.environment }}-${{ env.secret }}
-        aws-region: ${{ env.region }}
+          aws-region: ${{ env.region }}
 
       - name: Set environment variables
         run: |
