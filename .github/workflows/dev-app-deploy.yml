@@ -37,7 +37,8 @@ jobs:
         id: fetch-secrets
         uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
-          secret-ids: ,${{ env.environment }}-${{ env.secret }}
+          secret-ids: |
+            ,${{ env.environment }}-${{ env.secret }}
           parse-json-secrets: true
 
       - name: Set environment variables
