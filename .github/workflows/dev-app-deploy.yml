@@ -1,12 +1,12 @@
 name: "Dev App Build, Test and Release"
 
 on:
-  workflow_dispatch:
   # push:
   #   branches:
   #     - main
   #   paths:
   #     - app/**
+  workflow_dispatch:
 
 env:
   environment: "dev"
