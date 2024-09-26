@@ -49,33 +49,33 @@ jobs:
          echo ${{ env.ECR_REGISTRY }}
          echo ${{ env.ECS_CLUSTER }}
 
-      # - name: Build docker container
-      #   uses: docker/build-push-action@v6
-      #   with:
-      #     context: "{{defaultContext}}:app"
-      #     tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
-      #     build-args: APP_VERSION=${{ github.sha }}
-      #     push: false
+      - name: Build docker container
+        uses: docker/build-push-action@v6
+        with:
+          context: "{{defaultContext}}:app"
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
+          build-args: APP_VERSION=${{ github.sha }}
+          push: false
 
-      # - name: Login to Amazon ECR
-      #   if: ${{ github.ref == 'refs/heads/main' }}
-      #   id: login-ecr
-      #   uses: aws-actions/amazon-ecr-login@v2
-      #   with:
-      #     mask-password: true
-      #     registries: ${{ env.ACCOUNT_ID }}
+      - name: Login to Amazon ECR
+        if: ${{ github.ref == 'refs/heads/main' }}
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          mask-password: true
+          registries: ${{ env.ACCOUNT_ID }}
 
-      # - name: Push image to Amazon ECR
-      #   if: ${{ github.ref == 'refs/heads/main' }}
-      #   env:
-      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      #     ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
-      #     IMAGE_NAME: ${{ env.IMAGE_NAME }}
-      #     IMAGE_TAG: ${{ github.sha }}
-      #   run: |
-      #     docker tag $IMAGE_NAME:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-      #     docker tag $IMAGE_NAME:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
+      - name: Push image to Amazon ECR
+        if: ${{ github.ref == 'refs/heads/main' }}
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # docker tag $IMAGE_NAME:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker tag $IMAGE_NAME:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY --all-tags
 
       # - name: Download task definition for web
       #   if: ${{ github.ref == 'refs/heads/main' }}
