@@ -35,10 +35,10 @@ jobs:
 
       - name: Fetch secrets from AWS Secrets Manager
         id: fetch-secrets
-        uses: aws-actions/aws-secretsmanager-get-secret-value@v1
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
-          secret-id: ${{ env.environment }}-${{ env.secret }}
-          aws-region: ${{ env.region }}
+          secret-ids: ${{ env.environment }}-${{ env.secret }}
+          parse-json-secrets: true
 
       - name: Set environment variables
         run: |
