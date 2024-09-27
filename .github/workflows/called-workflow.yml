@@ -3,7 +3,7 @@ name: My Target Workflow
 on:
   repository_dispatch:
     types: [trigger-workflow]
-    
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-        ref: ${{ github.event.client_payload.sha }}
+          ref: ${{ github.event.client_payload.sha }}
 
       - name: run command
-        run: echo "i got called" 
+        run: echo "i got called"
