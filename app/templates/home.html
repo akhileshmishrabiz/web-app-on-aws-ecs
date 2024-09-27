@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h2 class="my-4">Home Page</h2>
+    <h2 class="my-4">Home Page: 1</h2>
     <div class="list-group">
         {% for post in posts %}
             <a href="{{ url_for('post', post_id=post.id) }}" class="list-group-item list-group-item-action">
