@@ -14,5 +14,9 @@ jobs:
         with:
           ref: ${{ github.event.client_payload.sha }}
 
-      - name: run command
-        run: echo "i got called"
+      - name: Parse and use payload
+        run: |
+          echo "Service: ${{ github.event.client_payload.service }}"
+          echo "Version: ${{ github.event.client_payload.version }}"
+          echo "Unit tests: ${{ github.event.client_payload.unit }}"
+          echo "Integration tests: ${{ github.event.client_payload.integration }}"
