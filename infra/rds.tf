@@ -40,7 +40,7 @@ resource "aws_db_instance" "postgres" {
   enabled_cloudwatch_logs_exports = lookup(local.db_data, "cloudwatch_logs", ["postgresql", "upgrade"])
   copy_tags_to_snapshot           = true
 
-  tags = {s
+  tags = {
     environment = var.environment
   }
 }
@@ -80,7 +80,7 @@ resource "aws_security_group" "rds" {
     from_port       = 5432
     to_port         = 5432
     cidr_blocks     = ["0.0.0.0/0"]
-    security_groups = [aws_security_group.ecs_tasks.id]
+    security_groups = [aws_security_group.ecs_tasks_flask.id]
   }
 
   egress {

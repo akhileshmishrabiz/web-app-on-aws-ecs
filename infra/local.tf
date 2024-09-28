@@ -4,7 +4,7 @@ locals {
     max_allocated_storage   = 100
     engine_version          = "14.10"
     instance_class          = "db.t3.small"
-    ca_cert_name            = "rds-ca-2019"
+    ca_cert_name            = "rds-ca-rsa2048-g1"
     backup_retention_period = 7
     db_name                 = "mydb"
     cloudwatch_logs         = ["postgresql", "upgrade"]

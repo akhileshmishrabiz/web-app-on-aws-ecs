@@ -30,7 +30,7 @@ resource "aws_ecs_service" "flask_app_service" {
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks_flask.id]
     subnets          = aws_subnet.public.*.id
-    assign_public_ip = false
+    assign_public_ip = true
   }
 
   service_connect_configuration {
@@ -64,9 +64,9 @@ resource "aws_ecs_service" "nginx_service" {
   launch_type                = "FARGATE"
 
   network_configuration {
-    security_groups  = [aws_security_group.ecs_tasks.id]
+    security_groups  = [aws_security_group.ecs_tasks_nginx.id]
     subnets          = aws_subnet.public.*.id
-    assign_public_ip = false
+    assign_public_ip = true
   }
 
   service_connect_configuration {
@@ -110,7 +110,7 @@ resource "aws_ecs_service" "redis_service" {
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks_redis.id]
     subnets          = aws_subnet.public.*.id
-    assign_public_ip = false
+    assign_public_ip = true
   }
 
   service_connect_configuration {

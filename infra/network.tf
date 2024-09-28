@@ -102,12 +102,12 @@ resource "aws_security_group" "lb" {
 }
 
 resource "aws_security_group" "ecs_tasks_flask" {
-  name        = "${var.environment}-${var.app_name}-ecs-tasks-sg"
+  name        = "${var.environment}-ecs-tasks-flask-sg"
   vpc_id      = aws_vpc.main.id
   description = "allow inbound access from the ALB only"
 
   ingress {
-    protocol    = "-1"
+    protocol    = "tcp"
     from_port   = 8080
     to_port     = 8080
     security_groups = [aws_security_group.ecs_tasks_nginx.id]
@@ -123,12 +123,12 @@ resource "aws_security_group" "ecs_tasks_flask" {
 }
 
 resource "aws_security_group" "ecs_tasks_redis" {
-  name        = "${var.environment}-${var.app_name}-ecs-tasks-sg"
+  name        = "${var.environment}-ecs-tasks-redis-sg"
   vpc_id      = aws_vpc.main.id
   description = "allow inbound access from the ALB only"
 
   ingress {
-    protocol    = "-1"
+    protocol    = "tcp"
     from_port   = 6379
     to_port     = 6379
     security_groups = [aws_security_group.ecs_tasks_flask.id]
@@ -144,12 +144,12 @@ resource "aws_security_group" "ecs_tasks_redis" {
 }
 
 resource "aws_security_group" "ecs_tasks_nginx" {
-  name        = "${var.environment}-${var.app_name}-ecs-tasks-sg"
+  name        = "${var.environment}-ecs-tasks-nginx-sg"
   vpc_id      = aws_vpc.main.id
   description = "allow inbound access from the ALB only"
 
   ingress {
-    protocol    = "http"
+    protocol    = "tcp"
     from_port   = 80
     to_port     = 80
     security_groups = [aws_security_group.lb.id]
