@@ -12,7 +12,7 @@ env:
 
 jobs:
   deploy:
-  if: ${{ github.event.client_payload.workflow_id == 'dev-image-build' }}
+  # if: ${{ github.event.client_payload.workflow_id == 'dev-image-build' }}
     runs-on: ubuntu-latest
     permissions:
       id-token: write
