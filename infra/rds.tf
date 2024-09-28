@@ -3,13 +3,13 @@ resource "aws_kms_key" "rds_kms" {
   deletion_window_in_days = 10
 
   tags = {
-    Name        = "rds-kms-key"
+    Name        = "${var.environment}-rds-kms-key"
     Environment = var.environment
   }
 }
 
 resource "aws_kms_alias" "rds_kms_alias" {
-  name          = "alias/rds-kms-key"
+  name          = "alias/${var.environment}-rds-kms-key"
   target_key_id = aws_kms_key.rds_kms.id
 }
 
@@ -20,7 +20,7 @@ resource "aws_db_instance" "postgres" {
   engine                = data.aws_rds_engine_version.postgresql.engine
   engine_version        = lookup(local.db_data, "engine_version", var.db_default_settings.engine_version)
   instance_class        = lookup(local.db_data, "instance_class", var.db_default_settings.instance_class)
-  username              = "postgres"
+  username              = var.db_default_settings.db_admin_username
   password              = random_password.dbs_random_string.result
   port                  = 5432
   publicly_accessible   = false
@@ -40,13 +40,13 @@ resource "aws_db_instance" "postgres" {
   enabled_cloudwatch_logs_exports = lookup(local.db_data, "cloudwatch_logs", ["postgresql", "upgrade"])
   copy_tags_to_snapshot           = true
 
-  tags = {
+  tags = {s
     environment = var.environment
   }
 }
 
 resource "aws_secretsmanager_secret" "dbs_secret" {
-  name                    = "db/${var.environment}"
+  name                    = "db/${var.environment}-${aws_db_instance.postgres.identifier}"
   description             = "DB link"
   kms_key_id              = aws_kms_key.rds_kms.arn
   recovery_window_in_days = 7
@@ -71,7 +71,7 @@ resource "random_password" "dbs_random_string" {
 }
 
 resource "aws_security_group" "rds" {
-  name        = "rds-sg"
+  name        = "${var.environment}-rds-sg"
   vpc_id      = aws_vpc.main.id
   description = "allow inbound access from the ECS only"
 

@@ -1,6 +1,6 @@
 locals {
   db_data = {
-    allocated_storage       = 30
+    allocated_storage       = var.db_allocated_storage
     max_allocated_storage   = 100
     engine_version          = "14.10"
     instance_class          = "db.t3.small"
@@ -47,7 +47,7 @@ locals {
       memory        = 2048
       template_file = "task-definitions/redis-service.json.tpl"
       vars = {
-        aws_ecr_repository            = "redis"
+        aws_ecr_repository            = "366140438193.dkr.ecr.ap-south-1.amazonaws.com/redis"
         tag                           = "latest"
         container_name                = "redis"
         aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-redis"

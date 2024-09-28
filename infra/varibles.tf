@@ -7,7 +7,10 @@ variable "environment" {
   type    = string
   default = "dev"
 }
-
+variable "db_allocated_storage" {
+  type    = string
+  default = "30"
+}
 
 variable "db_default_settings" {
   type = any

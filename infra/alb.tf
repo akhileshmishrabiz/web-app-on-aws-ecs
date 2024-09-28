@@ -1,5 +1,5 @@
 resource "aws_lb" "alb" {
-  name               = "${var.environment}-${var.app_name}alb"
+  name               = "${var.environment}-${var.app_name}-alb"
   subnets            = aws_subnet.public.*.id
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb.id]
