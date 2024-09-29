@@ -49,7 +49,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: ${{ env.ECS_APP_CONTAINER_NAME }}
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.event.client_payload.image_tag }}
+          image: ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.event.client_payload.image_tag }}
 
       - name: Deploy app on Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
