@@ -29,8 +29,8 @@ resource "aws_ecs_service" "flask_app_service" {
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks_flask.id]
-    subnets          = aws_subnet.public.*.id
-    assign_public_ip = true
+    subnets          = aws_subnet.private.*.id
+    assign_public_ip = false
   }
 
   service_connect_configuration {
@@ -65,8 +65,8 @@ resource "aws_ecs_service" "nginx_service" {
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks_nginx.id]
-    subnets          = aws_subnet.public.*.id
-    assign_public_ip = true
+    subnets          = aws_subnet.private.*.id
+    assign_public_ip = false
   }
 
   service_connect_configuration {
@@ -109,8 +109,8 @@ resource "aws_ecs_service" "redis_service" {
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks_redis.id]
-    subnets          = aws_subnet.public.*.id
-    assign_public_ip = true
+    subnets          = aws_subnet.private.*.id
+    assign_public_ip = false
   }
 
   service_connect_configuration {

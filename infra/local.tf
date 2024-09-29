@@ -56,16 +56,16 @@ locals {
     }
   ]
 
-  app_deploy_data ={
-  IMAGE_NAME: "flask-app"
-  ECR_REGISTRY: "366140438193.dkr.ecr.ap-south-1.amazonaws.com"
-  ECR_REPOSITORY: "${var.environment}-app"
-  ACCOUNT_ID: "366140438193"
-  ECS_CLUSTER: "${var.environment}-app-cluster"
-  ECS_REGION: "ap-south-1"
-  ECS_SERVICE: "${var.environment}-flask-app-service"
-  ECS_TASK_DEFINITION: "${var.environment}-flask-app"
-  ECS_APP_CONTAINER_NAME: "flask-app"
+  app_deploy_data = {
+    IMAGE_NAME : "flask-app"
+    ECR_REGISTRY : "366140438193.dkr.ecr.ap-south-1.amazonaws.com"
+    ECR_REPOSITORY : "${var.environment}-app"
+    ACCOUNT_ID : "366140438193"
+    ECS_CLUSTER : "${var.environment}-app-cluster"
+    ECS_REGION : "ap-south-1"
+    ECS_SERVICE : "${var.environment}-flask-app-service"
+    ECS_TASK_DEFINITION : "${var.environment}-flask-app"
+    ECS_APP_CONTAINER_NAME : "flask-app"
   }
 }
 
