@@ -1,34 +1,25 @@
-name: "Dev app deploy"
+name: "App Deploy - From Webhook"
 
 on:
   repository_dispatch:
     types: [trigger-workflow]
 
 env:
-  environment: "dev"
+  environment: ${{ github.event.client_payload.environment }}
   region: "ap-south-1"
   secret: "app-deploy-data"
+  image_tag: ${{ github.event.client_payload.image_tag }}
 
 jobs:
   deploy:
     name: deploy
     runs-on: ubuntu-latest
-    # permissions:
-    #   id-token: write
-    #   contents: read
-    env:
-      image_tag: ${{ github.event.client_payload.image_tag }}
-      environment: ${{ github.event.client_payload.environment }}
 
     steps:
       - name: print env
         run: |
-          echo ${{ env.image_tag }}
-          echo ${{ env.environment }}
-      # - name: Checkout code
-      #   uses: actions/checkout@v4
-      #   with:
-      #     ref: ${{ github.event.client_payload.sha }}
+          echo "Image tag: ${{ env.image_tag }} "
+          echo "environment: ${{ env.environment }}"
 
       - name: Configure AWS Credentials
         if: ${{ github.ref == 'refs/heads/main' }}
