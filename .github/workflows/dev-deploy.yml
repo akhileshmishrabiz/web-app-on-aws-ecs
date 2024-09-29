@@ -11,16 +11,20 @@ env:
 
 jobs:
   deploy:
-  # if: ${{ github.event.client_payload.workflow_id == 'dev-image-build' }}
     name: deploy
     runs-on: ubuntu-latest
     # permissions:
     #   id-token: write
     #   contents: read
+    env:
+      image_tag = ${{ github.event.client_payload.image_tag }}
+      environment = ${{ github.event.client_payload.environment }}
 
     steps:
-        - name: test
-          run: echo ${{ github.event.client_payload.image_tag }}
+        - name: print env
+          run: |
+            echo ${{ env.image_tag }}
+            echo ${{ env.environment }}
       # - name: Checkout code
       #   uses: actions/checkout@v4
       #   with:
