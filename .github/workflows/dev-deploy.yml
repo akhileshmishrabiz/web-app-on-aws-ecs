@@ -17,52 +17,53 @@ jobs:
     #   id-token: write
     #   contents: read
     env:
-      image_tag = ${{ github.event.client_payload.image_tag }}
-      environment = ${{ github.event.client_payload.environment }}
+      image_tag: ${{ github.event.client_payload.image_tag }}
+      environment: ${{ github.event.client_payload.environment }}
 
     steps:
-        - name: print env
-          run: |
-            echo ${{ env.image_tag }}
-            echo ${{ env.environment }}
+      - name: print env
+        run: |
+          echo ${{ env.image_tag }}
+          echo ${{ env.environment }}
       # - name: Checkout code
       #   uses: actions/checkout@v4
       #   with:
       #     ref: ${{ github.event.client_payload.sha }}
 
-      # - name: Configure AWS Credentials
-      #   if: ${{ github.ref == 'refs/heads/main' }}
-      #   uses: aws-actions/configure-aws-credentials@v3
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: ${{ env.region }}
+      - name: Configure AWS Credentials
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.region }}
 
-      # - name: Fetch secrets from AWS Secrets Manager
-      #   id: fetch-secrets
-      #   uses: aws-actions/aws-secretsmanager-get-secrets@v2
-      #   with:
-      #     secret-ids: |
-      #       ,${{ env.environment }}-${{ env.secret }}
-      #     parse-json-secrets: true
-      # - name: Download task definition for web
-      #   run: |
-      #     aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-      #     --query taskDefinition > task-definition.json
-      #     ls -l task-definition.json
+      - name: Fetch secrets from AWS Secrets Manager
+        id: fetch-secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            ,${{ env.environment }}-${{ env.secret }}
+          parse-json-secrets: true
 
-      # - name: Fill in the new image ID for web in the Amazon ECS task definition
-      #   id: task-def-web
-      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   with:
-      #     task-definition: task-definition.json
-      #     container-name: ${{ env.ECS_APP_CONTAINER_NAME }}
-      #     image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.event.client_payload.image_tag }}
+      - name: Download task definition for web
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query taskDefinition > task-definition.json
+          ls -l task-definition.json
 
-      # - name: Deploy app on Amazon ECS task definition
-      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-      #   with:
-      #     task-definition: ${{ steps.task-def-web.outputs.task-definition }}
-      #     service: ${{ env.ECS_SERVICE }}
-      #     cluster: ${{ env.ECS_CLUSTER }}
-      #     wait-for-service-stability: true
+      - name: Fill in the new image ID for web in the Amazon ECS task definition
+        id: task-def-web
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.ECS_APP_CONTAINER_NAME }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.event.client_payload.image_tag }}
+
+      - name: Deploy app on Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def-web.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
