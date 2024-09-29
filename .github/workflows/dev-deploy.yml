@@ -7,7 +7,7 @@ on:
 env:
   environment: ${{ github.event.client_payload.environment }}
   region: "ap-south-1"
-  secret: "app-deploy-data"
+  deployment_info: ${{ github.event.client_payload.deployment_info }}
   image_tag: ${{ github.event.client_payload.image_tag }}
 
 jobs:
@@ -34,7 +34,7 @@ jobs:
         uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
           secret-ids: |
-            ,${{ env.environment }}-${{ env.secret }}
+            ,${{ env.environment }}-${{ env.deployment_info }}
           parse-json-secrets: true
 
       - name: Download task definition for web
