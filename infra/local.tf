@@ -25,6 +25,7 @@ locals {
         database_name                 = aws_db_instance.postgres.db_name
         postgres_username             = aws_db_instance.postgres.username
         postgres_password             = random_password.dbs_random_string.result
+        database_url                  = aws_secretsmanager_secret_version.dbs_secret_val.secret_string
         environment                   = var.environment
       }
     },
