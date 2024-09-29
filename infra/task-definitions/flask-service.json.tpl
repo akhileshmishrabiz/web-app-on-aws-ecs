@@ -38,10 +38,6 @@
         "value": "${postgres_password}"
       },
       {
-        "name": "DATABASE_URL",
-        "value": "${database_url}"
-      },
-      {
         "name": "ENV",
         "value": "${environment}"
       }
