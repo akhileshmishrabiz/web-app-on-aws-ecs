@@ -25,10 +25,10 @@ resource "aws_db_instance" "postgres" {
   port                  = 5432
   publicly_accessible   = false
   db_subnet_group_name  = aws_db_subnet_group.postgres.id
-  # ca_cert_identifier    = lookup(local.db_data, "ca_cert_name", var.db_default_settings.ca_cert_name)
-  storage_encrypted = true
-  storage_type      = "gp3"
-  kms_key_id        = aws_kms_key.rds_kms.arn
+  ca_cert_identifier    = lookup(local.db_data, "ca_cert_name", var.db_default_settings.ca_cert_name)
+  storage_encrypted     = true
+  storage_type          = "gp3"
+  kms_key_id            = aws_kms_key.rds_kms.arn
   vpc_security_group_ids = [
     aws_security_group.rds.id
   ]

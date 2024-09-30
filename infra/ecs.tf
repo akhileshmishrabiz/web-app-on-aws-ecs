@@ -6,7 +6,7 @@ data "template_file" "services" {
 
 resource "aws_ecs_task_definition" "services" {
   for_each                 = { for service in local.ecs_services : service.name => service }
-  family                   = "${var.environment}-${each.key}"
+  family                   = "${var.environment}-${var.app_name}-${each.key}"
   network_mode             = "awsvpc"
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   cpu                      = each.value.cpu
@@ -20,17 +20,17 @@ resource "aws_ecs_task_definition" "services" {
 }
 
 resource "aws_ecs_service" "flask_app_service" {
-  name                       = "${var.environment}-flask-app-service"
+  name                       = "${var.environment}-${var.app_name}-flask-service"
   cluster                    = aws_ecs_cluster.main.id
-  task_definition            = aws_ecs_task_definition.services["flask-app"].arn
+  task_definition            = aws_ecs_task_definition.services["flask"].arn
   desired_count              = 2
   deployment_maximum_percent = 250
   launch_type                = "FARGATE"
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks_flask.id]
-    subnets          = aws_subnet.public.*.id
-    assign_public_ip = true
+    subnets          = aws_subnet.private.*.id
+    assign_public_ip = false
   }
 
   service_connect_configuration {
@@ -56,7 +56,7 @@ resource "aws_ecs_service" "flask_app_service" {
 }
 
 resource "aws_ecs_service" "nginx_service" {
-  name                       = "${var.environment}-nginx-service"
+  name                       = "${var.environment}-${var.app_name}-nginx-service"
   cluster                    = aws_ecs_cluster.main.id
   task_definition            = aws_ecs_task_definition.services["nginx"].arn
   desired_count              = 2
@@ -65,8 +65,8 @@ resource "aws_ecs_service" "nginx_service" {
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks_nginx.id]
-    subnets          = aws_subnet.public.*.id
-    assign_public_ip = true
+    subnets          = aws_subnet.private.*.id
+    assign_public_ip = false
   }
 
   service_connect_configuration {
@@ -83,7 +83,7 @@ resource "aws_ecs_service" "nginx_service" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.alb.arn
-    container_name   = "nginx"
+    container_name   = var.nginx_container_name
     container_port   = 80
   }
 
@@ -100,7 +100,7 @@ resource "aws_ecs_service" "nginx_service" {
 }
 
 resource "aws_ecs_service" "redis_service" {
-  name                       = "${var.environment}-redis-service"
+  name                       = "${var.environment}-${var.app_name}-redis-service"
   cluster                    = aws_ecs_cluster.main.id
   task_definition            = aws_ecs_task_definition.services["redis"].arn
   desired_count              = 2
@@ -109,8 +109,8 @@ resource "aws_ecs_service" "redis_service" {
 
   network_configuration {
     security_groups  = [aws_security_group.ecs_tasks_redis.id]
-    subnets          = aws_subnet.public.*.id
-    assign_public_ip = true
+    subnets          = aws_subnet.private.*.id
+    assign_public_ip = false
   }
 
   service_connect_configuration {

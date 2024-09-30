@@ -1,64 +1,60 @@
-name: "Dev app deploy"
+name: "App Deploy - From Webhook"
 
 on:
   repository_dispatch:
     types: [trigger-workflow]
 
 env:
-  environment: "dev"
+  environment: ${{ github.event.client_payload.environment }}
   region: "ap-south-1"
-  secret: "app-deploy-data"
+  deployment_info: ${{ github.event.client_payload.deployment_info }}
+  image_tag: ${{ github.event.client_payload.image_tag }}
 
 jobs:
   deploy:
-  # if: ${{ github.event.client_payload.workflow_id == 'dev-image-build' }}
     name: deploy
     runs-on: ubuntu-latest
-    # permissions:
-    #   id-token: write
-    #   contents: read
 
     steps:
-        - name: test
-          run: echo ${{ github.event.client_payload.image_tag }}
-      # - name: Checkout code
-      #   uses: actions/checkout@v4
-      #   with:
-      #     ref: ${{ github.event.client_payload.sha }}
+      - name: print env
+        run: |
+          echo "Image tag: ${{ env.image_tag }} "
+          echo "environment: ${{ env.environment }}"
 
-      # - name: Configure AWS Credentials
-      #   if: ${{ github.ref == 'refs/heads/main' }}
-      #   uses: aws-actions/configure-aws-credentials@v3
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: ${{ env.region }}
+      - name: Configure AWS Credentials
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.region }}
 
-      # - name: Fetch secrets from AWS Secrets Manager
-      #   id: fetch-secrets
-      #   uses: aws-actions/aws-secretsmanager-get-secrets@v2
-      #   with:
-      #     secret-ids: |
-      #       ,${{ env.environment }}-${{ env.secret }}
-      #     parse-json-secrets: true
-      # - name: Download task definition for web
-      #   run: |
-      #     aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
-      #     --query taskDefinition > task-definition.json
-      #     ls -l task-definition.json
+      - name: Fetch secrets from AWS Secrets Manager
+        id: fetch-secrets
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
+        with:
+          secret-ids: |
+            ,${{ env.environment }}-${{ env.deployment_info }}
+          parse-json-secrets: true
 
-      # - name: Fill in the new image ID for web in the Amazon ECS task definition
-      #   id: task-def-web
-      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
-      #   with:
-      #     task-definition: task-definition.json
-      #     container-name: ${{ env.ECS_APP_CONTAINER_NAME }}
-      #     image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.event.client_payload.image_tag }}
+      - name: Download task definition for web
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ env.ECS_TASK_DEFINITION }} \
+          --query taskDefinition > task-definition.json
+          ls -l task-definition.json
 
-      # - name: Deploy app on Amazon ECS task definition
-      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-      #   with:
-      #     task-definition: ${{ steps.task-def-web.outputs.task-definition }}
-      #     service: ${{ env.ECS_SERVICE }}
-      #     cluster: ${{ env.ECS_CLUSTER }}
-      #     wait-for-service-stability: true
+      - name: Fill in the new image ID for web in the Amazon ECS task definition
+        id: task-def-web
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.ECS_APP_CONTAINER_NAME }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.event.client_payload.image_tag }}
+
+      - name: Deploy app on Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def-web.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

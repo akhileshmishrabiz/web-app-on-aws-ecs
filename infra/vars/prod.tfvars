@@ -1,2 +1,2 @@
 environment = "prod"
-db_allocated_storage = "30"
+app_name    = "app"

@@ -8,14 +8,6 @@ data "aws_rds_engine_version" "postgresql" {
   version = lookup(local.db_data, "engine_version", "14.10")
 }
 
-# data "aws_secretsmanager_secret" "postgresql_password_secret" {
-#   name = local.rds_postgress_password_secret_name
-# }
+data "aws_region" "current" {}
 
-# data "aws_secretsmanager_secret_version" "rds_password" {
-#   secret_id = local.rds_postgress_password_secret_name
-# }
-
-# locals {
-#   rds_postgress_password_secret_name = "RDSPostgresPassword"
-# }
+data "aws_caller_identity" "current" {}

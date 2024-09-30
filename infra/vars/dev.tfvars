@@ -1,2 +1,2 @@
-environment= "dev"
-db_allocated_storage= "30"
+environment = "dev"
+app_name    = "app"
