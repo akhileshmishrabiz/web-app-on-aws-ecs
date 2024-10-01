@@ -23,7 +23,7 @@ resource "aws_ecs_service" "flask_app_service" {
   name                       = "${var.environment}-${var.app_name}-flask-service"
   cluster                    = aws_ecs_cluster.main.id
   task_definition            = aws_ecs_task_definition.services["flask"].arn
-  desired_count              = 2
+  desired_count              = var.desired_flask_task_count
   deployment_maximum_percent = 250
   launch_type                = "FARGATE"
 
@@ -59,7 +59,7 @@ resource "aws_ecs_service" "nginx_service" {
   name                       = "${var.environment}-${var.app_name}-nginx-service"
   cluster                    = aws_ecs_cluster.main.id
   task_definition            = aws_ecs_task_definition.services["nginx"].arn
-  desired_count              = 2
+  desired_count              = var.desired_nginx_task_count
   deployment_maximum_percent = 250
   launch_type                = "FARGATE"
 
@@ -103,7 +103,7 @@ resource "aws_ecs_service" "redis_service" {
   name                       = "${var.environment}-${var.app_name}-redis-service"
   cluster                    = aws_ecs_cluster.main.id
   task_definition            = aws_ecs_task_definition.services["redis"].arn
-  desired_count              = 2
+  desired_count              = var.desired_redis_task_count
   deployment_maximum_percent = 250
   launch_type                = "FARGATE"
 

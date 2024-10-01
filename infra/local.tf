@@ -20,12 +20,11 @@ locals {
         aws_ecr_repository            = aws_ecr_repository.python_app.repository_url
         tag                           = var.flask_app_tag
         container_name                = var.flask_app_container_name
-        aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-flask-app"
+        aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-flask"
         database_address              = aws_db_instance.postgres.address
         database_name                 = aws_db_instance.postgres.db_name
         postgres_username             = aws_db_instance.postgres.username
         postgres_password             = random_password.dbs_random_string.result
-        database_url                  = aws_secretsmanager_secret_version.dbs_secret_val.secret_string
         environment                   = var.environment
       }
     },
@@ -35,7 +34,7 @@ locals {
       memory        = var.nginx_memory
       template_file = var.nginx_template_file
       vars = {
-        aws_ecr_repository            = var.nginx_aws_ecr_repository
+        aws_ecr_repository            = aws_ecr_repository.nginx.repository_url
         tag                           = var.nginx_tag
         container_name                = var.nginx_container_name
         aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-nginx"
@@ -48,7 +47,7 @@ locals {
       memory        = var.redis_memory
       template_file = var.redis_template_file
       vars = {
-        aws_ecr_repository            = var.redis_aws_ecr_repository
+        aws_ecr_repository            = aws_ecr_repository.redis.repository_url
         tag                           = var.redis_tag
         container_name                = var.redis_container_name
         aws_cloudwatch_log_group_name = "/aws/ecs/${var.environment}-redis"
@@ -57,26 +56,26 @@ locals {
     }
   ]
 
-  app_deploy_data = {
+  flask_deploy_data = {
     IMAGE_NAME : "${var.app_name}-image"
     ECR_REGISTRY : "${data.aws_caller_identity.current.account_id}.dkr.ecr.${data.aws_region.current.name}.amazonaws.com"
-    ECR_REPOSITORY : "${var.environment}-${var.app_name}"
+    ECR_REPOSITORY : "${var.environment}-${var.app_name}-flask"
     ACCOUNT_ID : data.aws_caller_identity.current.account_id
     ECS_CLUSTER : "${var.environment}-${var.app_name}-cluster"
     ECS_REGION : data.aws_region.current.name
     ECS_SERVICE : "${var.environment}-${var.app_name}-flask-service"
-    ECS_TASK_DEFINITION : "${var.environment}-${var.app_name}"
+    ECS_TASK_DEFINITION : "${var.environment}-${var.app_name}-flask"
     ECS_APP_CONTAINER_NAME : var.flask_app_container_name
   }
 }
 
 
 resource "aws_secretsmanager_secret" "app_deploy_data" {
-  name        = "${var.environment}-${var.app_name}-deploy-data"
+  name        = "${var.environment}-${var.app_name}-flask-deploy-data"
   description = "Deployment data for the Flask app"
 }
 
 resource "aws_secretsmanager_secret_version" "app_deploy_data_version" {
   secret_id     = aws_secretsmanager_secret.app_deploy_data.id
-  secret_string = jsonencode(local.app_deploy_data)
+  secret_string = jsonencode(local.flask_deploy_data)
 }

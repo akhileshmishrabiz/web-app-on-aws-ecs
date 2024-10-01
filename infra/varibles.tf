@@ -55,6 +55,12 @@ variable "flask_app_container_name" {
   default     = "flask-app"
 }
 
+variable "desired_flask_task_count" {
+  description = "Desired count for the flask-app tasks"
+  type        = number
+  default     = 2
+
+}
 
 ##### nginx ####
 variable "nginx_cpu" {
@@ -91,6 +97,13 @@ variable "nginx_container_name" {
   description = "Container name for the nginx service"
   type        = string
   default     = "nginx"
+}
+
+variable "desired_nginx_task_count" {
+  description = "Desired count for the flask-app tasks"
+  type        = number
+  default     = 2
+
 }
 
 
@@ -130,4 +143,11 @@ variable "redis_container_name" {
   description = "Container name for the redis service"
   type        = string
   default     = "redis"
+}
+
+variable "desired_redis_task_count" {
+  description = "Desired count for the flask-app tasks"
+  type        = number
+  default     = 2
+
 }
