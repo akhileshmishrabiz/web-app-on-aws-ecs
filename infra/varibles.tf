@@ -8,6 +8,14 @@ variable "environment" {
   default = "dev"
 }
 
+variable "domain_name" {
+  type    = string
+  default = "livingdevops.com"
+  
+}
+
+##### RDS ############
+
 variable "db_default_settings" {
   type = any
   default = {
