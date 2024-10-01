@@ -11,7 +11,7 @@ variable "environment" {
 variable "domain_name" {
   type    = string
   default = "livingdevops.com"
-  
+
 }
 
 ##### RDS ############
