@@ -1,6 +1,8 @@
 # web-app-on-aws
 Flask + celery + redis + nginx running on ecs with RDS behind A load balancer
 
+![image](https://github.com/user-attachments/assets/07651178-80d2-4973-8890-9ad6433d1365)
+
 
 to run locally, run with postgres container
 
