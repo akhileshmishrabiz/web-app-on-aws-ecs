@@ -1,5 +1,5 @@
 # web-app-on-aws
-Flask with RDS on aws EC2 behind A load balancer
+Flask + celery + redis + nginx running on ecs with RDS behind A load balancer
 
 
 to run locally, run with postgres container
