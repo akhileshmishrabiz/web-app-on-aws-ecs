@@ -13,7 +13,9 @@ resource "aws_kms_alias" "rds_kms_alias" {
   target_key_id = aws_kms_key.rds_kms.id
 }
 
+# RDS instance for dev environment
 resource "aws_db_instance" "postgres" {
+  count                 = var.environment == "dev" ? 1 : 0
   identifier            = "${var.environment}-${var.app_name}-db"
   allocated_storage     = lookup(local.db_data, "allocated_storage", var.db_default_settings.allocated_storage)
   max_allocated_storage = lookup(local.db_data, "max_allocated_storage", var.db_default_settings.max_allocated_storage)
@@ -25,10 +27,10 @@ resource "aws_db_instance" "postgres" {
   port                  = 5432
   publicly_accessible   = false
   db_subnet_group_name  = aws_db_subnet_group.postgres.id
-  # ca_cert_identifier    = lookup(local.db_data, "ca_cert_name", var.db_default_settings.ca_cert_name)
-  storage_encrypted = true
-  storage_type      = "gp3"
-  kms_key_id        = aws_kms_key.rds_kms.arn
+  ca_cert_identifier    = lookup(local.db_data, "ca_cert_name", var.db_default_settings.ca_cert_name)
+  storage_encrypted     = true
+  storage_type          = "gp3"
+  kms_key_id            = aws_kms_key.rds_kms.arn
   vpc_security_group_ids = [
     aws_security_group.rds.id
   ]
@@ -45,8 +47,66 @@ resource "aws_db_instance" "postgres" {
   }
 }
 
+# RDS cluster for non-dev environments
+resource "aws_rds_cluster" "postgres" {
+  count                   = var.environment != "dev" ? 1 : 0
+  cluster_identifier      = "${var.environment}-${var.app_name}-cluster"
+  engine                  = "aurora-postgresql"
+  engine_version          = "14.9"
+  master_username         = var.db_default_settings.db_admin_username
+  master_password         = random_password.dbs_random_string.result
+  database_name           = lookup(local.db_data, "db_name", var.db_default_settings.db_name)
+  backup_retention_period = 7
+  preferred_backup_window = "07:00-09:00"
+  vpc_security_group_ids  = [aws_security_group.rds.id]
+  db_subnet_group_name    = aws_db_subnet_group.postgres.id
+   storage_encrypted       = true
+  kms_key_id              = aws_kms_key.rds_kms.arn
+
+  tags = {
+    environment = var.environment
+  }
+}
+
+resource "aws_rds_cluster_instance" "postgres_writer" {
+  count                = var.environment != "dev" ? 1 : 0
+  identifier           = "${var.environment}-${var.app_name}-writer"
+  cluster_identifier   = aws_rds_cluster.postgres[0].id
+  # instance_class       = lookup(local.db_data, "instance_class", var.db_default_settings.instance_class)
+  instance_class = "db.r5.large"
+  engine               = aws_rds_cluster.postgres[0].engine
+  engine_version       = aws_rds_cluster.postgres[0].engine_version
+  publicly_accessible  = false
+  db_subnet_group_name = aws_db_subnet_group.postgres.id
+  ca_cert_identifier   = lookup(local.db_data, "ca_cert_name", var.db_default_settings.ca_cert_name)
+  apply_immediately    = true
+
+  tags = {
+    environment = var.environment
+  }
+}
+
+resource "aws_rds_cluster_instance" "postgres_reader" {
+  count                = var.environment != "dev" ? 1 : 0
+  identifier           = "${var.environment}-${var.app_name}-reader"
+  cluster_identifier   = aws_rds_cluster.postgres[0].id
+  # instance_class       = lookup(local.db_data, "instance_class", var.db_default_settings.instance_class)
+  instance_class = "db.r5.large"
+  engine               = aws_rds_cluster.postgres[0].engine
+  engine_version       = aws_rds_cluster.postgres[0].engine_version
+  publicly_accessible  = false
+  db_subnet_group_name = aws_db_subnet_group.postgres.id
+  ca_cert_identifier   = lookup(local.db_data, "ca_cert_name", var.db_default_settings.ca_cert_name)
+  apply_immediately    = true
+
+  tags = {
+    environment = var.environment
+  }
+}
+
 resource "aws_secretsmanager_secret" "dbs_secret" {
-  name                    = "db/${var.environment}-${aws_db_instance.postgres.identifier}"
+  count                   = var.environment == "dev" ? 1 : 0
+  name                    = "db/${var.environment}-${aws_db_instance.postgres[0].identifier}"
   description             = "DB link"
   kms_key_id              = aws_kms_key.rds_kms.arn
   recovery_window_in_days = 7
@@ -56,8 +116,9 @@ resource "aws_secretsmanager_secret" "dbs_secret" {
 }
 
 resource "aws_secretsmanager_secret_version" "dbs_secret_val" {
-  secret_id     = aws_secretsmanager_secret.dbs_secret.id
-  secret_string = "postgres://${var.db_default_settings.db_admin_username}:${random_password.dbs_random_string.result}@${aws_db_instance.postgres.address}:${aws_db_instance.postgres.port}/${aws_db_instance.postgres.db_name}"
+  count         = var.environment == "dev" ? 1 : 0
+  secret_id     = aws_secretsmanager_secret.dbs_secret[0].id
+  secret_string = "postgres://${var.db_default_settings.db_admin_username}:${random_password.dbs_random_string.result}@${aws_db_instance.postgres[0].address}:${aws_db_instance.postgres[0].port}/${aws_db_instance.postgres[0].db_name}"
 
   lifecycle {
     create_before_destroy = true

@@ -8,3 +8,6 @@ data "aws_rds_engine_version" "postgresql" {
   version = lookup(local.db_data, "engine_version", "14.10")
 }
 
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}

@@ -7,6 +7,7 @@ postgres_username = os.environ.get("POSTGRES_USERNAME")
 postgres_password = os.environ.get("POSTGRES_PASSWORD")
 
 class Config:
+
     SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI =  f'postgresql://{postgres_username}:{postgres_password}@{db_host}:{db_port}/{db_name}'
     # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:tyVs6cQBoz@dev-app-db.cfykukwcw419.ap-south-1.rds.amazonaws.com:5432/mydb'
 
@@ -18,6 +19,8 @@ class Config:
     # CELERY_BROKER_URL = 'redis://localhost:6379/0'
     # CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
     # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:password@localhost:5432/postgres'   # running locally
-    # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:password@db:5432/mydb'   # with docker-compose
+
+     # with docker-compose
+    # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:password@db:5432/mydb' 
 
     

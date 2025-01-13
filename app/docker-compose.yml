@@ -8,8 +8,8 @@ services:
     networks:
       - cool_network 
     depends_on:
-      # db:
-      #   condition: service_healthy   # will wait for db to be ready
+      db:
+        condition: service_healthy   # will wait for db to be ready
       redis:
         condition: service_healthy   # will wait for redis to be ready
 
@@ -45,17 +45,17 @@ services:
       timeout: 5s
       retries: 5
 
-  # nginx:
-  #   image: nginx:latest
-  #   ports:
-  #     - "80:80"
-  #   volumes:
-  #     - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-  #   depends_on:
-  #     app:
-  #       condition: service_started
-  #   networks:
-  #     - cool_network
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      app:
+        condition: service_started
+    networks:
+      - cool_network
 
 volumes:
   postgres_data_new:

@@ -51,7 +51,8 @@ resource "aws_route" "internet_access" {
   gateway_id             = aws_internet_gateway.gateway.id
 }
 
-# use with private subnet if ecs taska need internet access
+# use with private subnet if ecs tasks need internet access
+
 resource "aws_eip" "gateway" {
   count      = 2
   depends_on = [aws_internet_gateway.gateway]
@@ -90,6 +91,13 @@ resource "aws_security_group" "lb" {
     protocol    = "tcp"
     from_port   = 80
     to_port     = 80
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol    = "tcp"
+    from_port   = 443
+    to_port     = 443
     cidr_blocks = ["0.0.0.0/0"]
   }
 
