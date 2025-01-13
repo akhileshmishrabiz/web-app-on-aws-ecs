@@ -1,5 +1,11 @@
+
+# web-app-on-aws
+Flask + celery + redis + nginx running on ecs with RDS behind A load balancer
+
+
 # To run locally, run with postgres container
 cd /app
+=======
 
 docker run --name flask_postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=postgres -p 5432:5432 -d postgres
 

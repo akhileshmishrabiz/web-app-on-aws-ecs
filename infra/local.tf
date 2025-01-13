@@ -67,6 +67,7 @@ locals {
     ECS_SERVICE : "${var.environment}-${var.app_name}-flask-service"
     ECS_TASK_DEFINITION : "${var.environment}-${var.app_name}-flask"
     ECS_APP_CONTAINER_NAME : var.flask_app_container_name
+
   }
 }
 

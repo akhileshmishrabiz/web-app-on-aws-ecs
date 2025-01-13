@@ -52,6 +52,7 @@ resource "aws_route" "internet_access" {
 }
 
 # use with private subnet if ecs tasks need internet access
+
 resource "aws_eip" "gateway" {
   count      = 2
   depends_on = [aws_internet_gateway.gateway]
