@@ -32,9 +32,9 @@ jobs:
         working-directory: ${{ env.TERRAFORM_PATH }}
         run: terraform init -backend-config=vars/dev.tfbackend
 
-      - name: Terraform Plan
-        working-directory: ${{ env.TERRAFORM_PATH }}
-        run: terraform plan -var-file=vars/dev.tfvars 
+      # - name: Terraform Plan
+      #   working-directory: ${{ env.TERRAFORM_PATH }}
+      #   run: terraform plan -var-file=vars/dev.tfvars 
 
       - name: Terraform Apply
         working-directory: ${{ env.TERRAFORM_PATH }}

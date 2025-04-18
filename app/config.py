@@ -8,19 +8,16 @@ postgres_password = os.environ.get("POSTGRES_PASSWORD")
 
 class Config:
 
+    # Uncomment when running on prod
     SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI =  f'postgresql://{postgres_username}:{postgres_password}@{db_host}:{db_port}/{db_name}'
-    # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:tyVs6cQBoz@dev-app-db.cfykukwcw419.ap-south-1.rds.amazonaws.com:5432/mydb'
+    #### SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:tyVs6cQBoz@dev-app-db.cfykukwcw419.ap-south-1.rds.amazonaws.com:5432/mydb'
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     CELERY_BROKER_URL = 'redis://redis:6379/0'
     CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 
-    # # while running locally
-    # CELERY_BROKER_URL = 'redis://localhost:6379/0'
-    # CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-    # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:password@localhost:5432/postgres'   # running locally
-
      # with docker-compose
+     # comment out when running with docker compose
     # SQLALCHEMY_DATABASE_URI = 'postgresql://postgres:password@db:5432/mydb' 
 
     
