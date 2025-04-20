@@ -3,19 +3,8 @@
 Flask + celery + redis + nginx running on ecs with RDS behind A load balancer
 
 
-# To run locally, run with postgres container
+# To run locally, with docker compose
 cd /app
-=======
-
-docker run --name flask_postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=postgres -p 5432:5432 -d postgres
-
-docker run --name flask_redis -p 6379:6379 -d redis
-
-python app.py
-
-# run app with dockr-compose
-
-cd app
 
 docker-compose up --build
 

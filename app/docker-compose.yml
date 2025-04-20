@@ -2,6 +2,11 @@
 services:
   app:
     build: . # This will build the container from the Dockerfile stored locally.
+    environment:
+      DB_ADDRESS: db
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: password
+      DB_NAME: mydb
     ports:
       - "8080:8080"
     networks:
