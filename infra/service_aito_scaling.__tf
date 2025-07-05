@@ -1,0 +1,255 @@
+# ===================================
+# ECS Auto Scaling Configuration
+# ===================================
+
+# Auto Scaling Target for Flask App Service
+resource "aws_appautoscaling_target" "flask_app_target" {
+  max_capacity       = var.flask_app_max_capacity
+  min_capacity       = var.flask_app_min_capacity
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.flask_app_service.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+# Auto Scaling Target for Nginx Service
+resource "aws_appautoscaling_target" "nginx_target" {
+  max_capacity       = var.nginx_max_capacity
+  min_capacity       = var.nginx_min_capacity
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.nginx_service.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+# Auto Scaling Target for Redis Service (optional, usually single instance)
+resource "aws_appautoscaling_target" "redis_target" {
+  max_capacity       = var.redis_max_capacity
+  min_capacity       = var.redis_min_capacity
+  resource_id        = "service/${aws_ecs_cluster.main.name}/${aws_ecs_service.redis_service.name}"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+# ===================================
+# CPU-based Auto Scaling Policies
+# ===================================
+
+# Flask App - CPU Scale Up Policy
+resource "aws_appautoscaling_policy" "flask_app_scale_up_cpu" {
+  name               = "${var.environment}-${var.app_name}-flask-scale-up-cpu"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.flask_app_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.flask_app_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.flask_app_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value       = var.flask_app_cpu_target
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 300
+  }
+}
+
+# Flask App - Memory Scale Up Policy
+resource "aws_appautoscaling_policy" "flask_app_scale_up_memory" {
+  name               = "${var.environment}-${var.app_name}-flask-scale-up-memory"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.flask_app_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.flask_app_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.flask_app_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+    target_value       = var.flask_app_memory_target
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 300
+  }
+}
+
+# Nginx - CPU Scale Up Policy
+resource "aws_appautoscaling_policy" "nginx_scale_up_cpu" {
+  name               = "${var.environment}-${var.app_name}-nginx-scale-up-cpu"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.nginx_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.nginx_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.nginx_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+    }
+    target_value       = var.nginx_cpu_target
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 300
+  }
+}
+
+# ===================================
+# Custom Metrics Auto Scaling (ALB Request Count)
+# ===================================
+
+# Flask App - Scale based on ALB Request Count per Target
+resource "aws_appautoscaling_policy" "flask_app_scale_requests" {
+  name               = "${var.environment}-${var.app_name}-flask-scale-requests"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.flask_app_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.flask_app_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.flask_app_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ALBRequestCountPerTarget"
+      resource_label         = "${aws_lb.alb.arn_suffix}/${aws_lb_target_group.alb.arn_suffix}"
+    }
+    target_value       = var.flask_app_requests_per_target
+    scale_in_cooldown  = 300
+    scale_out_cooldown = 300
+  }
+}
+
+# ===================================
+# Step Scaling Policies (Alternative approach)
+# ===================================
+
+# Flask App - Step Scaling Up Policy (Alternative to Target Tracking)
+resource "aws_appautoscaling_policy" "flask_app_step_scale_up" {
+  name               = "${var.environment}-${var.app_name}-flask-step-scale-up"
+  policy_type        = "StepScaling"
+  resource_id        = aws_appautoscaling_target.flask_app_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.flask_app_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.flask_app_target.service_namespace
+
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown               = 300
+    metric_aggregation_type = "Average"
+
+    step_adjustment {
+      metric_interval_lower_bound = 0
+      metric_interval_upper_bound = 50
+      scaling_adjustment          = 1
+    }
+
+    step_adjustment {
+      metric_interval_lower_bound = 50
+      scaling_adjustment          = 2
+    }
+  }
+}
+
+# Flask App - Step Scaling Down Policy
+resource "aws_appautoscaling_policy" "flask_app_step_scale_down" {
+  name               = "${var.environment}-${var.app_name}-flask-step-scale-down"
+  policy_type        = "StepScaling"
+  resource_id        = aws_appautoscaling_target.flask_app_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.flask_app_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.flask_app_target.service_namespace
+
+  step_scaling_policy_configuration {
+    adjustment_type         = "ChangeInCapacity"
+    cooldown               = 300
+    metric_aggregation_type = "Average"
+
+    step_adjustment {
+      metric_interval_upper_bound = 0
+      scaling_adjustment          = -1
+    }
+  }
+}
+
+# ===================================
+# CloudWatch Alarms for Step Scaling
+# ===================================
+
+# High CPU Alarm
+resource "aws_cloudwatch_metric_alarm" "flask_app_cpu_high" {
+  alarm_name          = "${var.environment}-${var.app_name}-flask-cpu-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = "80"
+  alarm_description   = "This metric monitors ecs cpu utilization"
+  alarm_actions       = [aws_appautoscaling_policy.flask_app_step_scale_up.arn]
+
+  dimensions = {
+    ServiceName = aws_ecs_service.flask_app_service.name
+    ClusterName = aws_ecs_cluster.main.name
+  }
+}
+
+# Low CPU Alarm
+resource "aws_cloudwatch_metric_alarm" "flask_app_cpu_low" {
+  alarm_name          = "${var.environment}-${var.app_name}-flask-cpu-low"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = "20"
+  alarm_description   = "This metric monitors ecs cpu utilization"
+  alarm_actions       = [aws_appautoscaling_policy.flask_app_step_scale_down.arn]
+
+  dimensions = {
+    ServiceName = aws_ecs_service.flask_app_service.name
+    ClusterName = aws_ecs_cluster.main.name
+  }
+}
+
+# High Memory Alarm
+resource "aws_cloudwatch_metric_alarm" "flask_app_memory_high" {
+  alarm_name          = "${var.environment}-${var.app_name}-flask-memory-high"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = "2"
+  metric_name         = "MemoryUtilization"
+  namespace           = "AWS/ECS"
+  period              = "300"
+  statistic           = "Average"
+  threshold           = "80"
+  alarm_description   = "This metric monitors ecs memory utilization"
+
+  dimensions = {
+    ServiceName = aws_ecs_service.flask_app_service.name
+    ClusterName = aws_ecs_cluster.main.name
+  }
+}
+
+# ===================================
+# Scheduled Scaling (Optional)
+# ===================================
+
+# Scale up during business hours
+resource "aws_appautoscaling_scheduled_action" "flask_app_scale_up_business_hours" {
+  name               = "${var.environment}-${var.app_name}-flask-scale-up-business"
+  service_namespace  = aws_appautoscaling_target.flask_app_target.service_namespace
+  resource_id        = aws_appautoscaling_target.flask_app_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.flask_app_target.scalable_dimension
+  schedule           = "cron(0 9 * * MON-FRI)"  # 9 AM UTC, Monday to Friday
+  timezone           = "UTC"
+
+  scalable_target_action {
+    min_capacity = var.flask_app_min_capacity
+    max_capacity = var.flask_app_max_capacity
+  }
+}
+
+# Scale down during off hours
+resource "aws_appautoscaling_scheduled_action" "flask_app_scale_down_off_hours" {
+  name               = "${var.environment}-${var.app_name}-flask-scale-down-off"
+  service_namespace  = aws_appautoscaling_target.flask_app_target.service_namespace
+  resource_id        = aws_appautoscaling_target.flask_app_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.flask_app_target.scalable_dimension
+  schedule           = "cron(0 18 * * MON-FRI)"  # 6 PM UTC, Monday to Friday
+  timezone           = "UTC"
+
+  scalable_target_action {
+    min_capacity = 1
+    max_capacity = var.flask_app_max_capacity
+  }
+}
