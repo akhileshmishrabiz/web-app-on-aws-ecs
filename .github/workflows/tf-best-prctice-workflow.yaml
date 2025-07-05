@@ -1,0 +1,200 @@
+name: Terraform Security and Validation
+
+on:
+  # push:
+  #   branches: [ main ]
+  # pull_request:
+  #   branches: [ main ]
+  workflow_dispatch:
+
+env:
+  TF_VERSION: "1.8.1"
+  TERRAFORM_DOCS_VERSION: "0.16.0"
+
+jobs:
+  terraform-security-validation:
+    name: Terraform Security and Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TF_VERSION }}
+
+    - name: Terraform Format Check
+      id: fmt
+      run: terraform fmt -check -recursive
+      continue-on-error: true
+
+    - name: Terraform Init
+      id: init
+      run: |
+        find . -name "*.tf" -exec dirname {} \; | sort -u | while read dir; do
+          echo "Initializing $dir"
+          cd "$dir"
+          terraform init -backend=false
+          cd - > /dev/null
+        done
+
+    - name: Terraform Validate
+      id: validate
+      run: |
+        find . -name "*.tf" -exec dirname {} \; | sort -u | while read dir; do
+          echo "Validating $dir"
+          cd "$dir"
+          terraform validate
+          cd - > /dev/null
+        done
+
+    - name: Setup Python for Checkov
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Checkov
+      run: |
+        pip install checkov
+
+    - name: Run Checkov
+      id: checkov
+      run: |
+        checkov -d . \
+          --framework terraform \
+          --output cli \
+          --output junitxml \
+          --output-file-path console,checkov-report.xml \
+          --soft-fail
+      continue-on-error: true
+
+    - name: Install tfsec
+      run: |
+        curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+        sudo mv tfsec /usr/local/bin/
+
+    - name: Run tfsec
+      id: tfsec
+      run: |
+        tfsec . \
+          --format json \
+          --out tfsec-report.json \
+          --soft-fail
+        tfsec . --format default
+      continue-on-error: true
+
+    - name: Install Trivy
+      run: |
+        sudo apt-get update
+        sudo apt-get install wget apt-transport-https gnupg lsb-release
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo "deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update
+        sudo apt-get install trivy
+
+    - name: Run Trivy IaC Scan
+      id: trivy
+      run: |
+        trivy config . \
+          --format json \
+          --output trivy-report.json \
+          --exit-code 0
+        trivy config . --format table
+      continue-on-error: true
+
+    - name: Install TFLint
+      run: |
+        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+        sudo mv tflint /usr/local/bin/
+
+    - name: Run TFLint
+      id: tflint
+      run: |
+        find . -name "*.tf" -exec dirname {} \; | sort -u | while read dir; do
+          echo "Running TFLint in $dir"
+          cd "$dir"
+          tflint --init
+          tflint --format compact
+          cd - > /dev/null
+        done
+      continue-on-error: true
+
+    - name: Setup Node.js for terraform-docs
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install terraform-docs
+      run: |
+        curl -sSLo ./terraform-docs.tar.gz https://terraform-docs.io/dl/v${{ env.TERRAFORM_DOCS_VERSION }}/terraform-docs-v${{ env.TERRAFORM_DOCS_VERSION }}-$(uname)-amd64.tar.gz
+        tar -xzf terraform-docs.tar.gz
+        chmod +x terraform-docs
+        sudo mv terraform-docs /usr/local/bin/
+
+    - name: Generate terraform-docs
+      run: |
+        find . -name "*.tf" -exec dirname {} \; | sort -u | while read dir; do
+          if [ -f "$dir/main.tf" ] || [ -f "$dir/variables.tf" ]; then
+            echo "Generating docs for $dir"
+            terraform-docs markdown table --output-file README.md "$dir"
+          fi
+        done
+
+    - name: Upload Security Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-reports
+        path: |
+          checkov-report.xml
+          tfsec-report.json
+          trivy-report.json
+        retention-days: 30
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          
+          let comment = '## 🔍 Terraform Security and Validation Results\n\n';
+          
+          // Format check results
+          comment += '### 📝 Format Check\n';
+          comment += '${{ steps.fmt.outcome }}' === 'success' ? '✅ **PASSED**\n' : '❌ **FAILED** - Code formatting issues found\n';
+          comment += '\n';
+          
+          // Validation results
+          comment += '### ✅ Validation\n';
+          comment += '${{ steps.validate.outcome }}' === 'success' ? '✅ **PASSED**\n' : '❌ **FAILED** - Validation errors found\n';
+          comment += '\n';
+          
+          // Security scan results
+          comment += '### 🛡️ Security Scans\n';
+          comment += '- **Checkov**: ${{ steps.checkov.outcome }}' === 'success' ? '✅ PASSED' : '⚠️ ISSUES FOUND';
+          comment += '\n- **tfsec**: ${{ steps.tfsec.outcome }}' === 'success' ? '✅ PASSED' : '⚠️ ISSUES FOUND';
+          comment += '\n- **Trivy**: ${{ steps.trivy.outcome }}' === 'success' ? '✅ PASSED' : '⚠️ ISSUES FOUND';
+          comment += '\n- **TFLint**: ${{ steps.tflint.outcome }}' === 'success' ? '✅ PASSED' : '⚠️ ISSUES FOUND';
+          comment += '\n\n';
+          
+          comment += '📊 **Security reports** have been uploaded as artifacts for detailed review.\n';
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+
+    - name: Fail if Critical Issues Found
+      if: steps.fmt.outcome == 'failure' || steps.validate.outcome == 'failure'
+      run: |
+        echo "❌ Critical issues found in Terraform code!"
+        echo "- Format check: ${{ steps.fmt.outcome }}"
+        echo "- Validation: ${{ steps.validate.outcome }}"
+        exit 1
