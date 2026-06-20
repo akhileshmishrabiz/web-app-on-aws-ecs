@@ -69,7 +69,8 @@ body {
 
 .nav-links a:hover { color: var(--text); }
 
-.nav-player {
+.nav-player,
+.player-label {
     font-size: 0.85rem;
     color: var(--text-muted);
     font-family: var(--mono);

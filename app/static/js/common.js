@@ -58,6 +58,10 @@ async function submitScore(gameType, score, details = '') {
                 details: details
             })
         });
+        if (!resp.ok) {
+            showToast('Failed to submit score', 'error');
+            return { ok: false };
+        }
         const data = await resp.json();
         if (data.ok) {
             const bonus = data.daily_bonus ? ' (2× daily bonus!)' : '';

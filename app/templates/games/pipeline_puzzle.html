@@ -19,6 +19,7 @@
         <h3 style="margin-bottom:0.75rem;font-size:0.95rem;color:var(--text-muted)">Available Stages</h3>
         <div class="pipeline-stages-pool" id="pool"></div>
         <button class="btn btn-primary" id="check-btn" disabled>Validate Pipeline</button>
+        <p class="hint-text" style="margin-top:0.75rem">Drag stages into the pipeline, click a stage to move it, or drop onto a stage to reorder.</p>
         <div id="feedback"></div>
     </div>
 </div>
@@ -27,37 +28,91 @@
 <script>
 const CORRECT = {{ correct_order|tojson }};
 const STAGES = {{ stages|tojson }};
-let score = 600, moves = 0;
+let score = 600, moves = 0, finished = false;
 const pipeline = document.getElementById('pipeline');
 const pool = document.getElementById('pool');
+const checkBtn = document.getElementById('check-btn');
 
-STAGES.forEach(s => {
+function pipelineChipCount() {
+    return pipeline.querySelectorAll('.stage-chip').length;
+}
+
+function updateCheckBtn() {
+    checkBtn.disabled = finished || pipelineChipCount() !== CORRECT.length;
+}
+
+function clearValidationMarks() {
+    document.querySelectorAll('.stage-chip').forEach(c => c.classList.remove('correct', 'wrong'));
+    document.getElementById('feedback').innerHTML = '';
+}
+
+function createChip(stage) {
     const chip = document.createElement('div');
     chip.className = 'stage-chip';
     chip.draggable = true;
-    chip.dataset.id = s.id;
-    chip.innerHTML = `${s.icon} ${s.label}`;
-    chip.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', s.id); chip.classList.add('dragging'); });
+    chip.dataset.id = stage.id;
+    chip.innerHTML = `${stage.icon} ${stage.label}`;
+    chip.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', stage.id);
+        e.dataTransfer.effectAllowed = 'move';
+        chip.classList.add('dragging');
+    });
     chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
-    pool.appendChild(chip);
-});
+    chip.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
+    chip.addEventListener('drop', e => handleDrop(e, chip.parentElement, chip));
+    chip.addEventListener('click', () => {
+        if (finished) return;
+        clearValidationMarks();
+        const dest = chip.parentElement === pipeline ? pool : pipeline;
+        dest.appendChild(chip);
+        moves++;
+        document.getElementById('moves').textContent = moves;
+        updateCheckBtn();
+    });
+    return chip;
+}
+
+STAGES.forEach(s => pool.appendChild(createChip(s)));
+
+function handleDrop(e, zone, beforeChip = null) {
+    e.preventDefault();
+    e.stopPropagation();
+    document.querySelectorAll('.pipeline-dropzone, .pipeline-stages-pool').forEach(z => z.classList.remove('drag-over'));
+    const id = e.dataTransfer.getData('text/plain');
+    const chip = document.querySelector(`.stage-chip[data-id="${id}"]`);
+    if (!chip || !zone) return;
+    clearValidationMarks();
+    if (beforeChip && beforeChip !== chip && zone.contains(beforeChip)) {
+        zone.insertBefore(chip, beforeChip);
+    } else {
+        zone.appendChild(chip);
+    }
+    moves++;
+    document.getElementById('moves').textContent = moves;
+    updateCheckBtn();
+}
 
 [pipeline, pool].forEach(zone => {
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-    zone.addEventListener('drop', e => {
+    zone.addEventListener('dragover', e => {
         e.preventDefault();
-        zone.classList.remove('drag-over');
-        const id = e.dataTransfer.getData('text/plain');
-        const chip = document.querySelector(`.stage-chip[data-id="${id}"]`);
-        if (chip) { zone.appendChild(chip); moves++; document.getElementById('moves').textContent = moves; document.getElementById('check-btn').disabled = pipeline.children.length !== CORRECT.length; }
+        e.dataTransfer.dropEffect = 'move';
+        zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave', e => {
+        if (!zone.contains(e.relatedTarget)) zone.classList.remove('drag-over');
+    });
+    zone.addEventListener('drop', e => {
+        const before = e.target.closest('.stage-chip');
+        handleDrop(e, zone, before && zone.contains(before) ? before : null);
     });
 });
 
-document.getElementById('check-btn').addEventListener('click', async () => {
-    const order = [...pipeline.children].map(c => c.dataset.id);
+checkBtn.addEventListener('click', async () => {
+    if (finished) return;
+    const chips = [...pipeline.querySelectorAll('.stage-chip')];
+    const order = chips.map(c => c.dataset.id);
     let correct = 0;
-    [...pipeline.children].forEach((c, i) => {
+    chips.forEach((c, i) => {
         if (order[i] === CORRECT[i]) { c.classList.add('correct'); correct++; }
         else c.classList.add('wrong');
     });
@@ -66,14 +121,13 @@ document.getElementById('check-btn').addEventListener('click', async () => {
     document.getElementById('score').textContent = score;
     const fb = document.getElementById('feedback');
     if (correct === CORRECT.length) {
+        finished = true;
         fb.innerHTML = '<div class="feedback-box success">✅ Pipeline green! Ship it! (metaphorically — please use canary deploys)</div>';
-        document.getElementById('check-btn').disabled = true;
+        checkBtn.disabled = true;
         const result = await submitScore('pipeline_puzzle', score, `Perfect: ${correct}/${CORRECT.length}`);
         setTimeout(() => showResult(document.getElementById('game-area'), score, '🎉 Pipeline Master!', result.new_badges || [], 'Pipeline Puzzle'), 1500);
     } else {
-        fb.innerHTML = `<div class="feedback-box error">❌ ${correct}/${CORRECT.length} stages correct. The build is sad.</div>`;
-        const result = await submitScore('pipeline_puzzle', score, `${correct}/${CORRECT.length} correct`);
-        setTimeout(() => showResult(document.getElementById('game-area'), score, 'Pipeline needs work', result.new_badges || [], 'Pipeline Puzzle'), 2000);
+        fb.innerHTML = `<div class="feedback-box error">❌ ${correct}/${CORRECT.length} stages correct. Rearrange and validate again.</div>`;
     }
 });
 </script>

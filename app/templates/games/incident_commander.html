@@ -28,7 +28,9 @@ function renderScenario() {
     const s = SCENARIOS[idx];
     timeLeft = s.time_limit;
     document.getElementById('scenario-num').textContent = idx + 1;
-    document.getElementById('timer').textContent = timeLeft;
+    const timerEl = document.getElementById('timer');
+    timerEl.textContent = timeLeft;
+    timerEl.classList.remove('urgent');
     document.getElementById('game-area').innerHTML = `
         <div class="scenario-card">
             <div class="scenario-title">${s.title}</div>
