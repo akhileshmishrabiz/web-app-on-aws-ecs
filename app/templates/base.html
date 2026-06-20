@@ -3,42 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flask Blog</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .navbar {
-            background-color: #28a745;
-        }
-        .navbar a {
-            color: white !important;
-        }
-        .container {
-            margin-top: 20px;
-        }
-    </style>
+    <title>{% block title %}DevOps Games{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/devops-games.css') }}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <a class="navbar-brand" href="{{ url_for('home') }}">Flask Blog</a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('home') }}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('create_post') }}">Create Post</a>
-                </li>
-            </ul>
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a class="nav-brand" href="{{ url_for('home') }}">
+                <span class="brand-icon">⚡</span> DevOps Games
+            </a>
+            <button class="nav-toggle" id="nav-toggle" aria-label="Toggle menu">☰</button>
+            <div class="nav-links" id="nav-links">
+                <a href="{{ url_for('home') }}">Arcade</a>
+                <a href="{{ url_for('leaderboard') }}">Leaderboard</a>
+                <a href="{{ url_for('achievements_page') }}">Badges</a>
+            </div>
+            <div class="nav-actions">
+                <button class="sound-toggle" id="sound-toggle" title="Toggle sound effects" aria-label="Toggle sound">🔇</button>
+                <span class="player-label">👤 {{ player|default('Guest') }}</span>
+            </div>
         </div>
     </nav>
-    <div class="container">
+
+    <div id="toast-container" class="toast-container"></div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="flash-container">
+                {% for message in messages %}
+                    <div class="flash-msg">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main class="main-content">
         {% block content %}{% endblock %}
-    </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    </main>
+
+    <footer class="site-footer">
+        <p>Built for engineers who've been paged at 3 AM. <em>It works on my machine™</em></p>
+    </footer>
+
+    <script>
+        window.DEVOPS_GAMES = {
+            playerName: {{ (player|default('Anonymous DevOps Hero'))|tojson }},
+            apiScore: {{ url_for('submit_score')|tojson }}
+        };
+    </script>
+    <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+    <script>
+        document.getElementById('nav-toggle')?.addEventListener('click', () => {
+            document.getElementById('nav-links')?.classList.toggle('open');
+        });
+        document.querySelectorAll('.flash-msg').forEach(msg => {
+            showToast(msg.textContent, 'info');
+        });
+    </script>
 </body>
 </html>

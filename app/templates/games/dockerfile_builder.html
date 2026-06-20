@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Dockerfile Builder — DevOps Games{% endblock %}
+{% block content %}
+<div class="game-layout">
+    <a href="{{ url_for('home') }}" class="back-link">← Back to Arcade</a>
+    <div class="game-header">
+        <h1>🐳 Dockerfile Builder</h1>
+        <p>Fix the broken Dockerfiles before they land in prod. Your image shall not run as root.</p>
+    </div>
+    {% include 'games/_daily_banner.html' %}
+    <div class="game-hud">
+        <span>Score: <span class="hud-score" id="score">0</span></span>
+        <span>Challenge: <span id="ch-num">1</span>/{{ challenges|length }}</span>
+        {% if personal_best %}<span class="personal-best-hud">🏅 Best: {{ personal_best }}</span>{% endif %}
+    </div>
+    <div class="game-area" id="game-area"></div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+const CHALLENGES = {{ challenges|tojson }};
+let idx = 0, totalScore = 0;
+
+function render() {
+    if (idx >= CHALLENGES.length) return finish();
+    const c = CHALLENGES[idx];
+    document.getElementById('ch-num').textContent = idx + 1;
+    let dots = CHALLENGES.map((_, i) => `<span class="challenge-dot ${i < idx ? 'done' : ''} ${i === idx ? 'active' : ''}"></span>`).join('');
+    document.getElementById('game-area').innerHTML = `
+        <div class="challenge-nav">${dots}</div>
+        <div class="scenario-title">${c.title}</div>
+        <p class="hint-text">💡 Hint: ${c.hint}</p>
+        <ul class="error-list">${c.errors.map(e => `<li>${e}</li>`).join('')}</ul>
+        <textarea class="code-editor" id="editor">${c.broken}</textarea>
+        <div style="margin-top:1rem;display:flex;gap:0.75rem">
+            <button class="btn btn-primary" id="submit-btn">Build Image</button>
+            <button class="btn btn-ghost" id="reset-btn">Reset</button>
+        </div>
+        <div id="feedback"></div>`;
+    document.getElementById('reset-btn').addEventListener('click', () => { document.getElementById('editor').value = c.broken; });
+    document.getElementById('submit-btn').addEventListener('click', () => check(c));
+}
+
+function check(c) {
+    const user = normalizeText(document.getElementById('editor').value);
+    const fixed = normalizeText(c.fixed);
+    const fb = document.getElementById('feedback');
+    if (user === fixed) {
+        const pts = 150;
+        totalScore += pts;
+        document.getElementById('score').textContent = totalScore;
+        fb.innerHTML = `<div class="feedback-box success">✅ Image built successfully! (+${pts} XP)</div>`;
+        setTimeout(() => { idx++; render(); }, 1200);
+    } else {
+        fb.innerHTML = '<div class="feedback-box error">❌ Build failed. Check your Dockerfile — compare with the hint.</div>';
+    }
+}
+
+async function finish() {
+    const result = await submitScore('dockerfile_builder', totalScore, `${CHALLENGES.length} challenges`);
+    showResult(document.getElementById('game-area'), totalScore,
+        totalScore >= 450 ? '🐳 Docker Whisperer!' : 'Build complete', result.new_badges || [], 'Dockerfile Builder');
+}
+
+render();
+</script>
+{% endblock %}

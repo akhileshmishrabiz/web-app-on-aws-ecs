@@ -1,86 +1,87 @@
-<html></html>
-  <head>
-    <title>Flask + Celery Examples</title>
-    <style>
-        .progress {
-            width: 100%;
-            text-align: center;
-        }
-    </style>
-  </head>
-  <body>
-    <h1>Flask + Celery Examples</h1>
-    <h2>Example 1: Send Asynchronous Email</h2>
-    {% for message in get_flashed_messages() %}
-    <p style="color: red;">{{ message }}</p>
-    {% endfor %}
-    <form method="POST">
-      <p>Send test email to: <input type="text" name="email" value="{{ email }}"></p>
-      <input type="submit" name="submit" value="Send">
-      <input type="submit" name="submit" value="Send in 1 minute">
-    </form>
-    <hr>
-    <h2>Example 2: Long running task with progress updates</h2>
-    <!--<button onclick="start_long_task();">Start Long Calculation</button><br><br>-->
-    <button id="start-bg-job">Start Long Calculation</button><br><br>
-    <div id="progress"></div>
+{% extends 'base.html' %}
 
-    <script src="//cdnjs.cloudflare.com/ajax/libs/nanobar/0.2.1/nanobar.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
-    <script>
-        function start_long_task() {
-            // add task status elements
-            div = $('<div class="progress"><div></div><div>0%</div><div>...</div><div>&nbsp;</div></div><hr>');
-            $('#progress').append(div);
+{% block title %}Celery Demo — DevOps Games{% endblock %}
 
-            // create a progress bar
-            var nanobar = new Nanobar({
-                bg: '#44f',
-                target: div[0].childNodes[0]
-            });
+{% block content %}
+<section class="page-header">
+    <h1>📬 Background Tasks Demo</h1>
+    <p>Celery + Redis async workers — because even games need background jobs.</p>
+</section>
 
-            // send ajax POST request to start background job
-            $.ajax({
-                type: 'POST',
-                url: '/longtask',
-                success: function(data, status, request) {
-                    status_url = request.getResponseHeader('Location');
-                    update_progress(status_url, nanobar, div[0]);
-                },
-                error: function() {
-                    alert('Unexpected error');
-                }
-            });
-        }
-        function update_progress(status_url, nanobar, status_div) {
-            // send GET request to status URL
-            $.getJSON(status_url, function(data) {
-                // update UI
-                percent = parseInt(data['current'] * 100 / data['total']);
-                nanobar.go(percent);
-                $(status_div.childNodes[1]).text(percent + '%');
-                $(status_div.childNodes[2]).text(data['status']);
-                if (data['state'] != 'PENDING' && data['state'] != 'PROGRESS') {
-                    if ('result' in data) {
-                        // show result
-                        $(status_div.childNodes[3]).text('Result: ' + data['result']);
-                    }
-                    else {
-                        // something unexpected happened
-                        $(status_div.childNodes[3]).text('Result: ' + data['state']);
-                    }
-                }
-                else {
-                    // rerun in 2 seconds
-                    setTimeout(function() {
-                        update_progress(status_url, nanobar, status_div);
-                    }, 2000);
-                }
-            });
-        }
-        $(function() {
-            $('#start-bg-job').click(start_long_task);
-        });
-    </script>
-  </body>
-</html>
+<div class="two-col celery-demo">
+    <div class="panel">
+        <h2>📧 Async Email</h2>
+        <p class="panel-desc">Queue an email via Celery worker (requires SMTP credentials).</p>
+        <form method="POST">
+            <div class="form-group">
+                <label>Email address</label>
+                <input type="email" name="email" value="{{ email }}" required class="form-input">
+            </div>
+            <div class="form-actions">
+                <button type="submit" name="submit" value="Send" class="btn btn-primary">Send Now</button>
+                <button type="submit" name="submit" value="Send Later" class="btn btn-ghost">Send in 1 Minute</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="panel">
+        <h2>⚙️ Long-Running Task</h2>
+        <p class="panel-desc">Simulates a deploy pipeline with live progress polling.</p>
+        <button id="start-task" class="btn btn-primary">Start Deploy Simulation</button>
+        <div id="task-status" class="task-status hidden">
+            <div class="task-progress-bar">
+                <div id="task-progress-fill" class="task-progress-fill"></div>
+            </div>
+            <p id="task-message" class="task-message">Initializing...</p>
+            <p id="task-detail" class="task-detail"></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('start-task').addEventListener('click', async () => {
+    const btn = document.getElementById('start-task');
+    const status = document.getElementById('task-status');
+    const fill = document.getElementById('task-progress-fill');
+    const message = document.getElementById('task-message');
+    const detail = document.getElementById('task-detail');
+
+    btn.disabled = true;
+    status.classList.remove('hidden');
+    message.textContent = 'Queuing task...';
+    detail.textContent = '';
+    fill.style.width = '0%';
+
+    try {
+        const resp = await fetch('{{ url_for("longtask") }}', { method: 'POST' });
+        const taskUrl = resp.headers.get('Location');
+        if (!taskUrl) throw new Error('No task ID returned');
+
+        const poll = setInterval(async () => {
+            const statusResp = await fetch(taskUrl);
+            const data = await statusResp.json();
+            const pct = data.total ? Math.round((data.current / data.total) * 100) : 0;
+            fill.style.width = pct + '%';
+            message.textContent = data.status || data.state;
+            detail.textContent = data.state === 'SUCCESS'
+                ? '✅ Task completed! Result: ' + (data.result ?? 'done')
+                : `${data.current || 0} / ${data.total || '?'} steps`;
+
+            if (data.state === 'SUCCESS' || data.state === 'FAILURE') {
+                clearInterval(poll);
+                btn.disabled = false;
+                if (data.state === 'SUCCESS') showToast('Deploy simulation complete!', 'success');
+                else showToast('Task failed: ' + data.status, 'error');
+            }
+        }, 800);
+    } catch (e) {
+        message.textContent = 'Failed to start task';
+        detail.textContent = e.message;
+        btn.disabled = false;
+        showToast('Could not start Celery task', 'error');
+    }
+});
+</script>
+{% endblock %}

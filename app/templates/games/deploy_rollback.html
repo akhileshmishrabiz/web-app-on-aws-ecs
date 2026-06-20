@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Deploy or Rollback — DevOps Games{% endblock %}
+{% block content %}
+<div class="game-layout">
+    <a href="{{ url_for('home') }}" class="back-link">← Back to Arcade</a>
+    <div class="game-header">
+        <h1>🎲 Deploy or Rollback</h1>
+        <p>High-pressure production decisions. Your SLAs are watching.</p>
+    </div>
+    {% include 'games/_daily_banner.html' %}
+    <div class="game-hud">
+        <span>Score: <span class="hud-score" id="score">0</span></span>
+        <span>Round: <span id="round-num">1</span>/{{ scenarios|length }}</span>
+        {% if personal_best %}<span class="personal-best-hud">🏅 Best: {{ personal_best }}</span>{% endif %}
+    </div>
+    <div class="game-area" id="game-area"></div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+const SCENARIOS = {{ scenarios|tojson }};
+let idx = 0, totalScore = 0;
+
+function render() {
+    if (idx >= SCENARIOS.length) return finish();
+    const s = SCENARIOS[idx];
+    document.getElementById('round-num').textContent = idx + 1;
+    document.getElementById('game-area').innerHTML = `
+        <div class="scenario-card">
+            <div class="scenario-title">${s.title}</div>
+            <div class="scenario-context">${s.context}</div>
+            <div class="metrics-bar">
+                <div class="metric"><span class="metric-label">Error Rate</span><span class="metric-value">${s.metrics.error_rate}</span></div>
+                <div class="metric"><span class="metric-label">P99 Latency</span><span class="metric-value">${s.metrics.latency_p99}</span></div>
+                <div class="metric"><span class="metric-label">Deploys Today</span><span class="metric-value">${s.metrics.deploys_today}</span></div>
+            </div>
+            <div class="choice-grid" id="choices"></div>
+            <div id="feedback"></div>
+        </div>`;
+    s.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = opt.text;
+        btn.addEventListener('click', () => pick(opt, btn));
+        document.getElementById('choices').appendChild(btn);
+    });
+}
+
+function pick(opt, btn) {
+    document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+    totalScore += opt.points;
+    document.getElementById('score').textContent = Math.max(0, totalScore);
+    btn.classList.add(opt.correct ? 'correct' : 'wrong');
+    const cls = opt.points > 0 ? 'success' : opt.points < 0 ? 'error' : 'info';
+    document.getElementById('feedback').innerHTML =
+        `<div class="feedback-box ${cls}">${opt.feedback} (${opt.points >= 0 ? '+' : ''}${opt.points} XP)</div>`;
+    setTimeout(() => { idx++; render(); }, 2500);
+}
+
+async function finish() {
+    const finalScore = Math.max(0, totalScore);
+    const result = await submitScore('deploy_rollback', finalScore, `${SCENARIOS.length} rounds`);
+    showResult(document.getElementById('game-area'), finalScore,
+        finalScore >= 300 ? '🦸 Zero Downtime Hero!' : 'Shift debrief complete', result.new_badges || [], 'Deploy or Rollback');
+}
+
+render();
+</script>
+{% endblock %}

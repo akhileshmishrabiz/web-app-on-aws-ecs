@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Log Detective — DevOps Games{% endblock %}
+{% block content %}
+<div class="game-layout">
+    <a href="{{ url_for('home') }}" class="back-link">← Back to Arcade</a>
+    <div class="game-header">
+        <h1>🔎 Log Detective</h1>
+        <p>Find the root cause hiding in the log haystack. grep won't save you here.</p>
+    </div>
+    {% include 'games/_daily_banner.html' %}
+    <div class="game-hud">
+        <span>Score: <span class="hud-score" id="score">0</span></span>
+        <span>Case: <span id="case-num">1</span>/{{ challenges|length }}</span>
+        {% if personal_best %}<span class="personal-best-hud">🏅 Best: {{ personal_best }}</span>{% endif %}
+    </div>
+    <div class="game-area" id="game-area"></div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+const CHALLENGES = {{ challenges|tojson }};
+let idx = 0, totalScore = 0;
+
+function render() {
+    if (idx >= CHALLENGES.length) return finish();
+    const c = CHALLENGES[idx];
+    document.getElementById('case-num').textContent = idx + 1;
+    const lines = c.logs.trim().split('\n');
+    document.getElementById('game-area').innerHTML = `
+        <div class="scenario-title">${c.title}</div>
+        <p class="scenario-context">Click the log line with the error, or pick from the options below.</p>
+        <div class="log-viewer" id="logs">${lines.map((l, i) =>
+            `<div class="log-line ${l.includes('ERROR') ? 'error' : ''}" data-line="${i+1}">${l}</div>`
+        ).join('')}</div>
+        <div class="choice-grid" id="choices" style="margin-top:1rem"></div>
+        <div id="feedback"></div>`;
+    c.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', () => answer(i, c));
+        document.getElementById('choices').appendChild(btn);
+    });
+    document.querySelectorAll('.log-line').forEach(el => {
+        el.addEventListener('click', () => {
+            document.querySelectorAll('.log-line').forEach(l => l.classList.remove('selected'));
+            el.classList.add('selected');
+        });
+    });
+}
+
+function answer(i, c) {
+    document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+    const correct = i === c.correct_index;
+    const pts = correct ? 150 : 0;
+    totalScore += pts;
+    document.getElementById('score').textContent = totalScore;
+    document.querySelectorAll('.log-line')[c.error_line - 1]?.classList.add('selected');
+    document.getElementById('feedback').innerHTML =
+        `<div class="feedback-box ${correct ? 'success' : 'error'}">${correct ? '✅' : '❌'} ${c.error_summary} ${correct ? `(+${pts} XP)` : ''}</div>`;
+    setTimeout(() => { idx++; render(); }, 2000);
+}
+
+async function finish() {
+    const result = await submitScore('log_detective', totalScore, `${CHALLENGES.length} cases`);
+    showResult(document.getElementById('game-area'), totalScore,
+        totalScore >= 450 ? '🔎 Log Sleuth!' : 'Investigation closed', result.new_badges || [], 'Log Detective');
+}
+
+render();
+</script>
+{% endblock %}

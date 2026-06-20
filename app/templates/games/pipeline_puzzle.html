@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Pipeline Puzzle — DevOps Games{% endblock %}
+{% block content %}
+<div class="game-layout">
+    <a href="{{ url_for('home') }}" class="back-link">← Back to Arcade</a>
+    <div class="game-header">
+        <h1>🔧 Pipeline Puzzle</h1>
+        <p>Drag the CI/CD stages into the correct order. Get it wrong and Jenkins cries.</p>
+    </div>
+    {% include 'games/_daily_banner.html' %}
+    <div class="game-hud">
+        <span>Score: <span class="hud-score" id="score">0</span></span>
+        <span>Moves: <span id="moves">0</span></span>
+        {% if personal_best %}<span class="personal-best-hud">🏅 Best: {{ personal_best }}</span>{% endif %}
+    </div>
+    <div class="game-area" id="game-area">
+        <h3 style="margin-bottom:0.75rem;font-size:0.95rem;color:var(--text-muted)">Your Pipeline (drop stages here)</h3>
+        <div class="pipeline-dropzone" id="pipeline"></div>
+        <h3 style="margin-bottom:0.75rem;font-size:0.95rem;color:var(--text-muted)">Available Stages</h3>
+        <div class="pipeline-stages-pool" id="pool"></div>
+        <button class="btn btn-primary" id="check-btn" disabled>Validate Pipeline</button>
+        <div id="feedback"></div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+const CORRECT = {{ correct_order|tojson }};
+const STAGES = {{ stages|tojson }};
+let score = 600, moves = 0;
+const pipeline = document.getElementById('pipeline');
+const pool = document.getElementById('pool');
+
+STAGES.forEach(s => {
+    const chip = document.createElement('div');
+    chip.className = 'stage-chip';
+    chip.draggable = true;
+    chip.dataset.id = s.id;
+    chip.innerHTML = `${s.icon} ${s.label}`;
+    chip.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', s.id); chip.classList.add('dragging'); });
+    chip.addEventListener('dragend', () => chip.classList.remove('dragging'));
+    pool.appendChild(chip);
+});
+
+[pipeline, pool].forEach(zone => {
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const id = e.dataTransfer.getData('text/plain');
+        const chip = document.querySelector(`.stage-chip[data-id="${id}"]`);
+        if (chip) { zone.appendChild(chip); moves++; document.getElementById('moves').textContent = moves; document.getElementById('check-btn').disabled = pipeline.children.length !== CORRECT.length; }
+    });
+});
+
+document.getElementById('check-btn').addEventListener('click', async () => {
+    const order = [...pipeline.children].map(c => c.dataset.id);
+    let correct = 0;
+    [...pipeline.children].forEach((c, i) => {
+        if (order[i] === CORRECT[i]) { c.classList.add('correct'); correct++; }
+        else c.classList.add('wrong');
+    });
+    const penalty = (CORRECT.length - correct) * 80 + moves * 5;
+    score = Math.max(0, 600 - penalty);
+    document.getElementById('score').textContent = score;
+    const fb = document.getElementById('feedback');
+    if (correct === CORRECT.length) {
+        fb.innerHTML = '<div class="feedback-box success">✅ Pipeline green! Ship it! (metaphorically — please use canary deploys)</div>';
+        document.getElementById('check-btn').disabled = true;
+        const result = await submitScore('pipeline_puzzle', score, `Perfect: ${correct}/${CORRECT.length}`);
+        setTimeout(() => showResult(document.getElementById('game-area'), score, '🎉 Pipeline Master!', result.new_badges || [], 'Pipeline Puzzle'), 1500);
+    } else {
+        fb.innerHTML = `<div class="feedback-box error">❌ ${correct}/${CORRECT.length} stages correct. The build is sad.</div>`;
+        const result = await submitScore('pipeline_puzzle', score, `${correct}/${CORRECT.length} correct`);
+        setTimeout(() => showResult(document.getElementById('game-area'), score, 'Pipeline needs work', result.new_badges || [], 'Pipeline Puzzle'), 2000);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Incident Commander — DevOps Games{% endblock %}
+{% block content %}
+<div class="game-layout">
+    <a href="{{ url_for('home') }}" class="back-link">← Back to Arcade</a>
+    <div class="game-header">
+        <h1>🚨 Incident Commander</h1>
+        <p>You're on-call. The pager is screaming. Choose wisely — and fast.</p>
+    </div>
+    {% include 'games/_daily_banner.html' %}
+    <div class="game-hud">
+        <span>Score: <span class="hud-score" id="score">0</span></span>
+        <span>Scenario: <span id="scenario-num">1</span>/{{ scenarios|length }}</span>
+        <span class="hud-timer" id="timer">15</span>
+        <span class="hud-bonus" id="bonus-hint" title="Answer fast for time bonus">⚡ +5 XP/sec</span>
+        {% if personal_best %}<span class="personal-best-hud">🏅 Best: {{ personal_best }}</span>{% endif %}
+    </div>
+    <div class="game-area" id="game-area"></div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+const SCENARIOS = {{ scenarios|tojson }};
+let idx = 0, totalScore = 0, timer = null, timeLeft = 15;
+
+function renderScenario() {
+    if (idx >= SCENARIOS.length) return finish();
+    const s = SCENARIOS[idx];
+    timeLeft = s.time_limit;
+    document.getElementById('scenario-num').textContent = idx + 1;
+    document.getElementById('timer').textContent = timeLeft;
+    document.getElementById('game-area').innerHTML = `
+        <div class="scenario-card">
+            <div class="scenario-title">${s.title}</div>
+            <div class="scenario-context">${s.description}</div>
+            <div class="choice-grid" id="choices"></div>
+            <div id="feedback"></div>
+        </div>`;
+    const grid = document.getElementById('choices');
+    s.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = opt.text;
+        btn.addEventListener('click', () => pick(opt, btn));
+        grid.appendChild(btn);
+    });
+    clearInterval(timer);
+    timer = setInterval(() => {
+        timeLeft--;
+        const el = document.getElementById('timer');
+        el.textContent = timeLeft;
+        if (timeLeft <= 5) el.classList.add('urgent');
+        if (timeLeft <= 0) { clearInterval(timer); timeout(); }
+    }, 1000);
+}
+
+function pick(opt, btn) {
+    clearInterval(timer);
+    document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+    const pts = opt.correct ? 100 + timeLeft * 5 : 0;
+    totalScore += pts;
+    document.getElementById('score').textContent = totalScore;
+    btn.classList.add(opt.correct ? 'correct' : 'wrong');
+    document.getElementById('feedback').innerHTML =
+        `<div class="feedback-box ${opt.correct ? 'success' : 'error'}">${opt.feedback} ${opt.correct ? `(+${pts} XP)` : ''}</div>`;
+    setTimeout(() => { idx++; renderScenario(); }, 2000);
+}
+
+function timeout() {
+    document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+    document.getElementById('feedback').innerHTML = '<div class="feedback-box error">⏰ Time\'s up! The incident escalated to your manager.</div>';
+    setTimeout(() => { idx++; renderScenario(); }, 2000);
+}
+
+async function finish() {
+    clearInterval(timer);
+    const result = await submitScore('incident_commander', totalScore, `${SCENARIOS.length} scenarios`);
+    showResult(document.getElementById('game-area'), totalScore,
+        totalScore >= 350 ? '⚔️ Incident Warlord!' : 'Shift complete', result.new_badges || [], 'Incident Commander');
+}
+
+renderScenario();
+</script>
+{% endblock %}

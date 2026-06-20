@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Achievements — DevOps Games{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>🎖️ Achievements</h1>
+    <p>Collect badges. Flex on your team. Pretend pager duty never happened.</p>
+    {% set earned_count = earned|length %}
+    <div class="achievement-summary">
+        <span class="achievement-count">{{ earned_count }} / {{ achievements|length }} unlocked</span>
+        <div class="progress-bar overall-progress">
+            <div class="progress-fill" style="width: {{ (earned_count / achievements|length * 100)|int }}%"></div>
+        </div>
+    </div>
+</section>
+
+<div class="badge-grid">
+    {% for badge_id, badge in achievements.items() %}
+    {% set prog = progress[badge_id] %}
+    <div class="badge {% if badge_id in earned %}earned{% else %}locked{% endif %}">
+        <span class="badge-icon">{{ badge.icon if badge_id in earned else '🔒' }}</span>
+        <span class="badge-name">{{ badge.name }}</span>
+        <span class="badge-desc">{{ badge.description }}</span>
+        {% if badge_id in earned %}
+        <span class="badge-date">Earned {{ earned[badge_id].strftime('%b %d, %Y') }}</span>
+        {% else %}
+        <div class="badge-progress">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ prog.percent }}%"></div>
+            </div>
+            <span class="progress-label">{{ prog.current }} / {{ badge.threshold_label }}</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

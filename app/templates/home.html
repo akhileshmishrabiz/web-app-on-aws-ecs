@@ -1,13 +1,136 @@
 {% extends 'base.html' %}
 
+{% block title %}DevOps Games — Arcade{% endblock %}
+
 {% block content %}
-    <h2 class="my-4">Home Page: 1</h2>
-    <div class="list-group">
-        {% for post in posts %}
-            <a href="{{ url_for('post', post_id=post.id) }}" class="list-group-item list-group-item-action">
-                <h5 class="mb-1">{{ post.title }}</h5>
-                <p class="mb-1">{{ post.content[:100] }}...</p>
-            </a>
+<section class="hero">
+    <div class="hero-content">
+        <p class="hero-eyebrow">⚡ The On-Call Arcade</p>
+        <h1>Level Up Your <span class="gradient-text">DevOps Skills</span></h1>
+        <p class="hero-sub">Six mini-games. One leaderboard. Real scenarios. Zero pager trauma — okay, maybe a little.</p>
+        <form class="player-form" action="{{ url_for('set_player') }}" method="POST">
+            <input type="text" name="player_name" placeholder="Enter your callsign..." value="{{ player }}" maxlength="80" required>
+            <button type="submit" class="btn btn-primary">Join the Arcade</button>
+        </form>
+    </div>
+    <div class="hero-stats">
+        {% if profile %}
+        <div class="stat-card animate-in">
+            <span class="stat-value">{{ profile.total_score }}</span>
+            <span class="stat-label">Total XP</span>
+        </div>
+        <div class="stat-card animate-in" style="animation-delay:0.1s">
+            <span class="stat-value">{{ profile.games_played }}</span>
+            <span class="stat-label">Games Played</span>
+        </div>
+        <div class="stat-card animate-in" style="animation-delay:0.2s">
+            <span class="stat-value">{{ badges|length }}/{{ achievements|length }}</span>
+            <span class="stat-label">Badges</span>
+        </div>
+        {% else %}
+        <div class="stat-card animate-in">
+            <span class="stat-value">6</span>
+            <span class="stat-label">Games</span>
+        </div>
+        <div class="stat-card animate-in" style="animation-delay:0.1s">
+            <span class="stat-value">7</span>
+            <span class="stat-label">Badges</span>
+        </div>
+        <div class="stat-card animate-in" style="animation-delay:0.2s">
+            <span class="stat-value">∞</span>
+            <span class="stat-label">Incidents</span>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="daily-challenge">
+    <div class="daily-challenge-inner">
+        <div class="daily-badge">🎯 Daily Challenge</div>
+        <div class="daily-info">
+            <h2>{{ daily_game.icon }} {{ daily_game.name }}</h2>
+            <p>{{ daily_game.description }} <span class="daily-xp">2× XP bonus today!</span></p>
+        </div>
+        <a href="{{ url_for('game_page', slug=daily_game.slug) }}" class="btn btn-primary">Play Today's Game</a>
+    </div>
+</section>
+
+<section class="games-grid">
+    {% for game in games %}
+    <a href="{{ url_for('game_page', slug=game.slug) }}" class="game-card animate-in" style="--accent: {{ game.color }}; animation-delay: {{ loop.index0 * 0.05 }}s">
+        <div class="game-card-top">
+            <div class="game-card-icon">{{ game.icon }}</div>
+            <span class="difficulty-badge difficulty-{{ game.difficulty|lower }}">{{ game.difficulty }}</span>
+        </div>
+        <h3>{{ game.name }}</h3>
+        <p>{{ game.description }}</p>
+        <div class="game-tags">
+            {% for tag in game.tags %}
+            <span class="game-tag">{{ tag }}</span>
+            {% endfor %}
+        </div>
+        <div class="game-card-footer">
+            {% if personal_bests.get(game.slug) %}
+            <span class="personal-best">🏅 Best: {{ personal_bests[game.slug] }} XP</span>
+            {% else %}
+            <span class="personal-best muted">No score yet</span>
+            {% endif %}
+            <span class="play-link">Play →</span>
+        </div>
+    </a>
+    {% endfor %}
+</section>
+
+<section class="two-col">
+    <div class="panel">
+        <h2>🏆 Top Operators</h2>
+        {% if top_scores %}
+        <ol class="leaderboard-mini">
+            {% for name, total in top_scores %}
+            <li>
+                <span class="lb-rank">{{ loop.index }}</span>
+                <span class="lb-name">{{ name }}</span>
+                <span class="lb-score">{{ total }} XP</span>
+            </li>
+            {% endfor %}
+        </ol>
+        {% else %}
+        <p class="empty-state">No scores yet. Be the first to play!</p>
+        {% endif %}
+        <a href="{{ url_for('leaderboard') }}" class="btn btn-ghost">Full Leaderboard</a>
+    </div>
+    <div class="panel">
+        <h2>📡 Recent Activity</h2>
+        {% if recent_scores %}
+        <ul class="activity-feed">
+            {% for score in recent_scores %}
+            <li class="activity-item">
+                <span class="activity-player">{{ score.player_name }}</span>
+                <span class="activity-detail">scored <strong>{{ score.score }} XP</strong> in {{ game_type_labels.get(score.game_type, score.game_type) }}</span>
+                <span class="activity-time">{{ score.played_at.strftime('%H:%M') if score.played_at else '' }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="empty-state">The feed is quiet. Start a game!</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="panel badges-panel">
+    <h2>🎖️ Your Badges</h2>
+    {% if badges %}
+    <div class="badge-grid mini">
+        {% for badge in badges %}
+        <div class="badge earned" title="{{ achievements[badge.badge_id].description }}">
+            <span class="badge-icon">{{ achievements[badge.badge_id].icon }}</span>
+            <span class="badge-name">{{ achievements[badge.badge_id].name }}</span>
+        </div>
         {% endfor %}
     </div>
+    {% else %}
+    <p class="empty-state">Play games to earn badges like Pipeline Master and Zero Downtime Hero!</p>
+    {% endif %}
+    <a href="{{ url_for('achievements_page') }}" class="btn btn-ghost">All Badges & Progress</a>
+</section>
 {% endblock %}

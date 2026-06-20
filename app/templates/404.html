@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block title %}404 — DevOps Games{% endblock %}
+
+{% block content %}
+<section class="error-page">
+    <div class="error-code">404</div>
+    <h1>Route Not Found</h1>
+    <p class="error-message">This endpoint doesn't exist — unlike your production incidents at 3 AM.</p>
+    <div class="error-actions">
+        <a href="{{ url_for('home') }}" class="btn btn-primary">Back to Arcade</a>
+        <a href="{{ url_for('leaderboard') }}" class="btn btn-ghost">View Leaderboard</a>
+    </div>
+</section>
+{% endblock %}

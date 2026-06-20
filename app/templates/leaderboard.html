@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Leaderboard — DevOps Games{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>🏆 Leaderboard</h1>
+    <p>The operators who ship fast and break nothing (mostly).</p>
+</section>
+
+{% if personal_bests %}
+<div class="panel personal-bests-panel">
+    <h2>Your Personal Bests</h2>
+    <div class="game-scores-grid">
+        {% for game in games %}
+        {% set best = personal_bests.get(game.slug) %}
+        <div class="score-chip {% if best %}has-score{% endif %}">
+            <span class="chip-game">{{ game.name }}</span>
+            <span class="chip-score">{% if best %}{{ best }} XP{% else %}—{% endif %}</span>
+            <a href="{{ url_for('game_page', slug=game.slug) }}" class="chip-link">{% if best %}Beat it →{% else %}Play →{% endif %}</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<div class="panel">
+    <h2>Overall Rankings</h2>
+    {% if rows %}
+    <div class="table-responsive">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Operator</th>
+                <th>Total XP</th>
+                <th>Games Played</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for name, total, played in rows %}
+            <tr class="{% if name == player %}highlight-row{% endif %}">
+                <td>{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
+                <td>{{ name }}{% if name == player %} <span class="you-badge">you</span>{% endif %}</td>
+                <td class="score-cell">{{ total }}</td>
+                <td>{{ played }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    {% else %}
+    <p class="empty-state">No scores recorded yet. Hit the arcade!</p>
+    {% endif %}
+</div>
+
+{% if game_breakdown %}
+<div class="panel">
+    <h2>Best Scores by Game</h2>
+    <div class="game-scores-grid">
+        {% for game_type, player_name, best in game_breakdown[:18] %}
+        <div class="score-chip">
+            <span class="chip-game">{{ game_type_labels.get(game_type, game_type.replace('_', ' ').title()) }}</span>
+            <span class="chip-player">{{ player_name }}</span>
+            <span class="chip-score">{{ best }} XP</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
